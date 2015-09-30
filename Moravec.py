@@ -35,3 +35,4 @@ def moravec_window(a, x, y, u, v):
   return(res)
 
 moravec('erimitage.jpg')
+# testsssss if workz :D
