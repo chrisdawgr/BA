@@ -119,6 +119,7 @@ def accurate_keypoint_localization(I, vals, window_size):
 
 def find_max(dog1, dog2, dog3, y, x):
   """
+  TO DO: Point must be x percent larger than nearest.
   Determines if the given point(y,x) is a maximum or minimum point
   among it's 26 neighbours, in the scale above and below it.
   """
