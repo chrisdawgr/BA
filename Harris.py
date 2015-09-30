@@ -56,8 +56,8 @@ def gauss(size, sigma):
             x1 = x - size/2 
             y1 = y - size/2
             gauss_kernel[y][x] = (1/(2 * math.pi * sigma**2)) * math.e**(-(x1**2 + y1**2)/(2 * sigma**2))
-            print(y1, x1)
+            #print(y1, x1)
     return(gauss_kernel)
 
 a = gauss(5,1) * 273
-print(a)
+#print(a)
