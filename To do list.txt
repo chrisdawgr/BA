@@ -1,0 +1,3 @@
+CT:
+Kig på Lowe 1999 for alternativ keypoint localization method
+Implementer basal descriptor.
