@@ -69,4 +69,3 @@ def gauss(size, sigma):
 
 a = gauss(5,1) * 273
 print(a)
-# TESTING COMMIT
