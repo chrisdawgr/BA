@@ -174,19 +174,17 @@ def eliminating_edge_responses(I, vals, window_size, r):
     # calculation of the derivaties of D in x, y, xx, yy, yx direction
     Dx = float(D[1][0] - D[1][2]) / 2.0            # CT: where do calculations come frome
     Dy = float(D[0][1] - D[2][1]) / 2.0
-    Dxx = float(D[1][0] - 2.0 * D[1][1] + D[1][2]) # Dxx
-    Dyy = float(D[0][1] - 2.0 * D[1][1] + D[2][1]) # Dyy
+    Dxx = Dx * Dx # Dxx
+    Dyy = Dy * Dy # Dyy
 
     # TODO probally not correct
     # dD/dxdy - not sure if the calculation is correct
-    Dxy = float(D[2][0] + D[0][2] - D[0][0] - D[2][2]) / 4.0 # CT: page 12, shouldnt they be same?
-    Dyx = float(D[0][0] + D[2][2] - D[0][2] - D[2][0]) / 4.0 # 
-
+    Dyx = Dx * Dy
     # The Hessian matrix
     # Dyx Dxy might be interchanged
     # NOTE: when Dxy and Dyx are calculated individually, the
     # result on erimitage.jpg is MUCH better
-    D_hessian = numpy.array([[Dxx, Dxy], \
+    D_hessian = numpy.array([[Dxx, Dyx], \
                              [Dyx, Dyy]]) # CT: shouldnt they be same left to right diagonal?
 
     # trace and determinant of the Hessian matrix
@@ -386,7 +384,7 @@ def SIFT(Iname, k, sigma):
 
 # input(I, points, name) - points are a list of [y, x] vals, name is optional,
 # but should be a string
-def color_pic(arg):
+def color_pic(*arg):
   I = arg[0]
   vals = arg[1]
 
