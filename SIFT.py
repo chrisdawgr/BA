@@ -254,8 +254,6 @@ def SIFT(Iname, k, sigma):
   """
 
   # Writing points to file "out.txt"
-  with open('out.txt', 'wb') as f:
-    csv.writer(f, delimiter=' ').writerows(DoG_extrema_points_1_2)
 
   # cv2.imwrite('erimitage2.jpg',  I)
   vals = [DoG_extrema_points_1_1, DoG_extrema_points_1_2]
@@ -264,6 +262,8 @@ def SIFT(Iname, k, sigma):
   result1 = eliminating_edge_responses(dog2, [DoG_extrema_points_1_1], 3, 10)
   result2 = eliminating_edge_responses(dog3, [DoG_extrema_points_1_2], 3, 10)
   result = numpy.concatenate((result1, result2), axis=0)
+  with open('interest_points.txt', 'wb') as f:
+    csv.writer(f, delimiter=' ').writerows(result)
 
   color_pic(I, result, "avg.jpg")
 
