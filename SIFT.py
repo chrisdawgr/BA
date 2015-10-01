@@ -162,6 +162,7 @@ def eliminating_edge_responses(I, vals, window_size, r):
 
  
   # For each interest point:
+  oo = open("tr2_det.txt", "w")
   for i in range(0, len(first_vals)):
     y_coor = first_vals[i][0]        # CT: not used
     x_coor = first_vals[i][1]        # -|-
@@ -197,8 +198,14 @@ def eliminating_edge_responses(I, vals, window_size, r):
     # The second if, is the check tr^2/det < (r+1)^2/r.
     # in SIFT, the r value is 10
     if (det != 0):
+      val = tr**2 / det
+      oo.write(str(val) + "\n")
+
+    if (det != 0):
       if ((tr**2) / det < (float(r**2) / float(r))):
         result.append(first_vals[i])
+
+  oo.close()
 
   return(result)
 
@@ -358,8 +365,6 @@ def SIFT(Iname, k, sigma):
   """
 
   # Writing points to file "out.txt"
-  with open('out.txt', 'wb') as f:
-    csv.writer(f, delimiter=' ').writerows(DoG_extrema_points_1_2)
 
 
   # cv2.imwrite('erimitage2.jpg',  I)
@@ -369,6 +374,8 @@ def SIFT(Iname, k, sigma):
   result1 = eliminating_edge_responses(dog2, [DoG_extrema_points_1_1], 3, 0.2)
   result2 = eliminating_edge_responses(dog3, [DoG_extrema_points_1_2], 3, 0.2)
   result = numpy.concatenate((result1, result2), axis=0)
+  with open('interest_points.txt', 'wb') as f:
+    csv.writer(f, delimiter=' ').writerows(result)
 
   color_pic(I, result)
 
