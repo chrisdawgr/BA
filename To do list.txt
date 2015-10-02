@@ -6,3 +6,4 @@ Look at SURF
 
 AB:
 Orientation of keypoints
+Orientere sig om RANSAC og PROSAC
