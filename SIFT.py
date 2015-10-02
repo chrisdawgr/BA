@@ -9,35 +9,22 @@ import cv2
 import math
 import csv
 from PIL import Image
-
-def create_window(I, point, window_size):
-  """
-  Create window patch of size window_size
-  """
-  D = numpy.zeros([window_size, window_size])
-  half_w_size = window_size/2
-  y_p = point[0]
-  x_p = point[1]
-
-  for y in range(0, window_size):
-    for x in range(0, window_size):
-      D[y][x] = I[y_p - half_w_size + y][x_p - half_w_size + x]
-  return(D)
+import helperfunctions as h
 
 def getaverage(points):
   return (reduce(lambda x, y: x + y, points) / len(points))
 
 def find_max(dog1, dog2, dog3, y, x):
   """
-  TO DO: Point must be x percent larger than nearest.
+  TODO: Point must be x percent larger than nearest.
   Determines if the given point(y,x) is a maximum or minimum point
   among it's 26 neighbours, in the scale above and below it.
   """
   point = dog2[1][1]
 
-  dog1 = create_window(dog1, [y, x], 3)
-  dog2 = create_window(dog2, [y, x], 3)
-  dog3 = create_window(dog3, [y, x], 3)
+  dog1 = h.create_window(dog1, [y, x], 3)
+  dog2 = h.create_window(dog2, [y, x], 3)
+  dog3 = h.create_window(dog3, [y, x], 3)
   
   # Create array of neighbouring points 
   dog_points = numpy.array([dog1, dog2, dog3])
@@ -68,34 +55,41 @@ def find_max(dog1, dog2, dog3, y, x):
       return 0
   return 0
   """
-def eliminating_edge_responses(I, vals, window_size, r):
+
+def eliminating_edge_responses(I, points, window_size, r):
   """
   """
   result = []
-  first_vals = [] # List of interest points
+  first_points = [] # List of interest points
   
-  # appends ALL extremum points for a given scale, to first_vals
-  for i in range(0, len(vals)):
-    for j in vals[i]:
-      first_vals.append(map(int, j))
+  # appends ALL extremum points for a given scale, to first_points
+  for i in range(0, len(points)):
+    for j in points[i]:
+      first_points.append(map(int, j))
  
   # For each interest point in picture perform edge-elimination:
-  for i in range(0, len(first_vals)):
-    # D is a window with dimensions 3x3
-    D = numpy.zeros([window_size, window_size])  # Create 3x3 D
-    D = create_window(I, first_vals[i], 3)
+  for i in range(0, len(first_points)):
+    D = h.create_window(I, first_points[i], 3)
 
     # calculation of the derivaties of D in x, y, xx, yy, yx direction
-    Dx = float(D[1][0] - D[1][2]) / 2.0
-    Dy = float(D[0][1] - D[2][1]) / 2.0
-    Dxx = Dx * Dx # A
-    Dyy = Dy * Dy # B
-    Dyx = Dx * Dy # C
+    mask_dxx = numpy.array([[0, 0,  0], \
+                            [1, -2, 1], \
+                            [0, 0,  0]])
+
+    mask_dyy = mask_dxx.transpose()
+
+    Dxx = numpy.multiply(D, mask_dyy)
+    Dxx = Dxx.sum()
+
+    Dyy = numpy.multiply(D, mask_dyy)
+    Dyy = Dyy.sum()
+    Dxy = D[2][2] - D[2][0] - D[0][2] + D[0][0]
+
     # The Hessian matrix
     # NOTE: when Dxy and Dyx are calculated individually, the
     # result on erimitage.jpg is MUCH better
-    D_hessian = numpy.array([[Dxx, Dyx], \
-                             [Dyx, Dyy]])
+    D_hessian = numpy.array([[Dxx, Dxy], \
+                             [Dxy, Dyy]])
     # trace and determinant of the Hessian matrix
     tr = Dxx + Dyy
     det = numpy.linalg.det(D_hessian)
@@ -106,7 +100,7 @@ def eliminating_edge_responses(I, vals, window_size, r):
     # in SIFT, the r value is 10
     if (det != 0):
       if ((tr**2) / det < (float((r+1)**2) / float(r))):
-        result.append(first_vals[i])
+        result.append(first_points[i])
   return(result)
 
 def half_image(I):
@@ -259,8 +253,8 @@ def SIFT(Iname, k, sigma):
   vals = [DoG_extrema_points_1_1, DoG_extrema_points_1_2]
 
   # eliminating edge responses
-  result1 = eliminating_edge_responses(dog2, [DoG_extrema_points_1_1], 3, 10)
-  result2 = eliminating_edge_responses(dog3, [DoG_extrema_points_1_2], 3, 10)
+  result1 = eliminating_edge_responses(dog2, [DoG_extrema_points_1_1], 3, 0.5)
+  result2 = eliminating_edge_responses(dog3, [DoG_extrema_points_1_2], 3, 0.5)
   result = numpy.concatenate((result1, result2), axis=0)
   with open('interest_points.txt', 'wb') as f:
     csv.writer(f, delimiter=' ').writerows(result)
@@ -293,20 +287,6 @@ def color_pic(*arg):
     name = arg[2]
     cv2.imwrite(name, I)
 
-SIFT('erimitage.jpg', 1.5, 2)
-
-def gauss(size, sigma):
-  gauss_kernel = numpy.zeros([size, size])
-  for y in range(0, size):
-    for x in range(0, size):
-      half = int(size/2)
-      x1 = x - half
-      y1 = y - half
-      frac = (1.0/(2.0 * math.pi * sigma**2)) 
-      exponent = (x1**2.0 + y1**2.0)/(2.0 * sigma**2.0)
-      gauss_calc = frac * math.exp(- exponent)
-      gauss_kernel[y][x] = gauss_calc
-  return(gauss_kernel)
 
 #currently assuming, a window size of 3x3
 #NOT working properly, and NOT used in SIFT function
@@ -338,33 +318,6 @@ def accurate_keypoint_localization(I, vals, window_size):
     D = numpy.zeros([window_size, window_size])
     half_window_size = int(window_size/2)
 
-    for y in range(0, window_size):
-      y1 = y_coor - y + half_window_size
-      for x in range(0, window_size):
-        x1 = x_coor - x + half_window_size
-        #print(y_coor - y + half_window_size, x_coor - x + half_window_size)
-        D[y][x] = I[x1][y1]     # CT I[y1][x1] ? 
-
-    #print(D)
-    #print("\n")    
-
-    D_p0_p0 = D[window_size/2 + 0][window_size/2 + 0]
-    D_p0_m1 = D[window_size/2 + 0][window_size/2 - 1]
-    D_p0_p1 = D[window_size/2 + 0][window_size/2 + 1]
-    D_m1_p0 = D[window_size/2 - 1][window_size/2 + 0]
-    D_p1_p0 = D[window_size/2 + 1][window_size/2 + 0]
-
-    D_p1_p1 = D[window_size/2 + 1][window_size/2 + 1]
-    D_p1_m1 = D[window_size/2 + 1][window_size/2 - 1]
-    D_m1_p1 = D[window_size/2 - 1][window_size/2 + 1]
-    D_m1_m1 = D[window_size/2 - 1][window_size/2 - 1]
-
-    Dx = float(D_p0_p1 - D_p0_m1) / 2.0
-    Dy = float(D_p1_p0 - D_m1_p0) / 2.0
-    Dxx = float(D_p0_p1 - 2.0 * D_p0_p0 + D_p0_m1)
-    Dyy = float(D_p1_p0 - 2.0 * D_p0_p0 + D_m1_p0)
-    Dyx = float(D_m1_m1 + D_p1_p1 - D_m1_p1 - D_p1_m1) / 4.0
-    #Dxy = (- D_-1_-1 - D_+1_+1 + D_-1_+1 + D_+1_-1)/4
 
     D_hessian = numpy.array([[Dxx, Dyx], \
                              [Dyx, Dyy]])
@@ -391,3 +344,4 @@ def accurate_keypoint_localization(I, vals, window_size):
           
       """
   #print(final_mat)
+SIFT('erimitage2.jpg', 1, 1.5)
