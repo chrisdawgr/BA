@@ -56,10 +56,11 @@ def find_max(dog1, dog2, dog3, y, x):
   return 0
   """
 
-def eliminating_edge_responses(I, points, window_size, r):
+def eliminating_edge_responses(I, points, r):
   """
   """
   result = []
+  tr2det = []
   first_points = [] # List of interest points
   
   # appends ALL extremum points for a given scale, to first_points
@@ -78,12 +79,12 @@ def eliminating_edge_responses(I, points, window_size, r):
 
     mask_dyy = mask_dxx.transpose()
 
-    Dxx = numpy.multiply(D, mask_dyy)
+    Dxx = numpy.multiply(D, mask_dxx)
     Dxx = Dxx.sum()
 
     Dyy = numpy.multiply(D, mask_dyy)
     Dyy = Dyy.sum()
-    Dxy = D[2][2] - D[2][0] - D[0][2] + D[0][0]
+    Dxy = D[2][2] - D[0][2] - D[2][0] + D[0][0]
 
     # The Hessian matrix
     # NOTE: when Dxy and Dyx are calculated individually, the
@@ -98,10 +99,11 @@ def eliminating_edge_responses(I, points, window_size, r):
     # thus an initial check is needed. 
     # The second if, is the check tr^2/det < (r+1)^2/r.
     # in SIFT, the r value is 10
-    if (det != 0):
-      if ((tr**2) / det < (float((r+1)**2) / float(r))):
+    if (det > 0):
+      if (float(tr)**2 / float(det) < float((r+1)**2) / float(r)):
         result.append(first_points[i])
-  return(result)
+        tr2det.append(float(tr)**2 / float(det))
+  return(result, tr2det)
 
 def half_image(I):
   """
@@ -111,7 +113,7 @@ def half_image(I):
 
 # NOTE: SIFT calls the "eliminating_edge_responses function, and shows
 # final picture
-def SIFT(Iname, k, sigma):
+def SIFT(Iname, r_mag):
   """
   Returns the interest points found
   """
@@ -183,6 +185,14 @@ def SIFT(Iname, k, sigma):
   dog2 = DoG_scale1[1]
   dog3 = DoG_scale1[2]
   dog4 = DoG_scale1[3]
+  cv2.imshow('image', dog1)
+  cv2.waitKey(0)
+  cv2.imshow('image', dog2)
+  cv2.waitKey(0)
+  cv2.imshow('image', dog3)
+  cv2.waitKey(0)
+  cv2.imshow('image', dog4)
+  cv2.waitKey(0)
 
   dog6 = DoG_scale2[0]
   dog7 = DoG_scale2[1]
@@ -253,23 +263,18 @@ def SIFT(Iname, k, sigma):
   vals = [DoG_extrema_points_1_1, DoG_extrema_points_1_2]
 
   # eliminating edge responses
-  result1 = eliminating_edge_responses(dog2, [DoG_extrema_points_1_1], 3, 0.5)
-  result2 = eliminating_edge_responses(dog3, [DoG_extrema_points_1_2], 3, 0.5)
+  [result1, tr2det1] = eliminating_edge_responses(dog2, \
+      [DoG_extrema_points_1_1], r_mag) 
+  [result2, tr2det2] = eliminating_edge_responses(dog3, \
+      [DoG_extrema_points_1_2], r_mag)
   result = numpy.concatenate((result1, result2), axis=0)
-  with open('interest_points.txt', 'wb') as f:
-    csv.writer(f, delimiter=' ').writerows(result)
+  tr2det = numpy.concatenate((tr2det1, tr2det2), axis=0)
+  totxt = numpy.vstack([result.transpose(),tr2det]).transpose()
+  h.points_to_txt(totxt, "interest_points.txt", "\n")
+  #with open('interest_points.txt', 'wb') as f:
+    #csv.writer(f, delimiter=' ').writerows(result)
 
-  color_pic(I, result, "avg.jpg")
-
-  #cv2.imwrite('DoG1.jpg',I1)
-  #cv2.imwrite('DoG2.jpg',I2)
-  #cv2.imwrite('DoG3.jpg',I3)
-
-  #cv2.imshow('image', I)
-  #cv2.waitKey(100000)
-  #cv2.imshow('image', testp)
-  #cv2.waitKey(100000)
-
+  color_pic(I, result, "sift-"+ "r-" + str(r_mag) + ".jpg")
 
 # input(I, points, name) - points are a list of [y, x] vals, name is optional,
 # but should be a string
@@ -280,8 +285,8 @@ def color_pic(*arg):
   if (len(arg) >= 2):
     for a in vals:
       I[a[0]][a[1]] = [0,0,255]
-    cv2.imshow('image', I)
-    cv2.waitKey(0)
+    #cv2.imshow('image', I)
+    #cv2.waitKey(0)
 
   if (len(arg) == 3):
     name = arg[2]
@@ -344,4 +349,5 @@ def accurate_keypoint_localization(I, vals, window_size):
           
       """
   #print(final_mat)
-SIFT('erimitage2.jpg', 1, 1.5)
+
+SIFT('erimitage2.jpg', 1)
