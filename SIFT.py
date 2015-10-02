@@ -166,12 +166,31 @@ def SIFT(Iname, r_mag):
   scipy.ndimage.filters.gaussian_filter(I_bw,sigma = sigma[9]),
   scipy.ndimage.filters.gaussian_filter(I_bw,sigma = sigma[10])
   ]
+  
+
+  first = o1sc[0]
+  second = o1sc[1]
 
   DoG_scale1 = []
   DoG_scale2 = []
   DoG_scale3 = []
   DoG_scale4 = []
+
+  D = numpy.zeros([height, length])
+  E = numpy.zeros([height, length])
+  for y in range(height):
+    for x in range(length):
+      E[y][x] = int(second[y][x]) - int(first[y][x])
+      if int(second[y][x]) - int(first[y][x]) <0:
+        D[y][x] = 0
+      else:
+        D[y][x] = int(second[y][x]) - int(first[y][x])
   
+  #cv2.imshow('image', D)
+  #cv2.waitKey(0)
+  cv2.imwrite('F.jpg',  D)
+  cv2.imwrite('C.jpg',  E)
+  print "hey"
   # Append for differnt scales of image
   for i in range(0, 4):
     DoG_scale1.append(o1sc[i + 1] - o1sc[i])
@@ -185,14 +204,14 @@ def SIFT(Iname, r_mag):
   dog2 = DoG_scale1[1]
   dog3 = DoG_scale1[2]
   dog4 = DoG_scale1[3]
-  cv2.imshow('image', dog1)
-  cv2.waitKey(0)
-  cv2.imshow('image', dog2)
-  cv2.waitKey(0)
-  cv2.imshow('image', dog3)
-  cv2.waitKey(0)
-  cv2.imshow('image', dog4)
-  cv2.waitKey(0)
+  #cv2.imshow('image', dog1)
+  #cv2.waitKey(0)
+  #cv2.imshow('image', dog2)
+  #cv2.waitKey(0)
+  #cv2.imshow('image', dog3)
+  #cv2.waitKey(0)
+  #cv2.imshow('image', dog4)
+  #cv2.waitKey(0)
 
   dog6 = DoG_scale2[0]
   dog7 = DoG_scale2[1]
@@ -270,7 +289,7 @@ def SIFT(Iname, r_mag):
   result = numpy.concatenate((result1, result2), axis=0)
   tr2det = numpy.concatenate((tr2det1, tr2det2), axis=0)
   totxt = numpy.vstack([result.transpose(),tr2det]).transpose()
-  h.points_to_txt(totxt, "interest_points.txt", "\n")
+  #h.points_to_txt(totxt, "interest_points.txt", "\n")
   #with open('interest_points.txt', 'wb') as f:
     #csv.writer(f, delimiter=' ').writerows(result)
 
@@ -350,4 +369,4 @@ def accurate_keypoint_localization(I, vals, window_size):
       """
   #print(final_mat)
 
-SIFT('erimitage2.jpg', 1)
+SIFT('erimitage2.jpg', 1.1)
