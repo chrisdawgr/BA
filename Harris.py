@@ -13,8 +13,12 @@ def harris(Iname, k, thresh,flag):
   Output: Finds interest points using -
           the feature detecor method "Harris corner detector"
   """
-  thresh2 =  thresh # 9000
-  thresh1 = thresh # #200000000
+  if flag == 1:
+    method = "Harris"
+    print "Using Harris method with a threshold of:", thresh, "recommended threshold is 200000000"
+  if flag == 2:
+    method = "HoShiThomas"
+    print "Using HoShiThomas method with a threshold of:", thresh, "recommended threshold is 9000"
   # Create empty image holders:
   I = cv2.imread(Iname)
   I_bw = cv2.imread(Iname, 0)
@@ -61,32 +65,29 @@ def harris(Iname, k, thresh,flag):
       c = Ixy[y][x]
       # Harris method:
       if flag == 1:
+        #print "flag = 1"
         C[y][x] = (a*b - c**2) - k * (a + b)**2
       # HoShiThomas method:  
       if flag == 2:
+        print "flag = 2"
         M = numpy.array([[a, c],[c, b]])
         e_vals, e_vecs = LA.eig(M)
         e_vals = e_vals.real
         C[y][x] = min(e_vals)
-      else:
-        return "Set flag to 1 for harris, 2 for shi-thomasi"  
   
   # Threshold values to perform edge hysteresis:
   for y in range(3, len(C)):
     for x in range(3, len(C[0])):
       if flag == 1:
-        if (C[y][x] > thresh1):
+        if (C[y][x] > thresh):
           I[y][x] = [0,0,255]
       if flag == 2:
-        if (C[y][x] > thresh2):
+        if (C[y][x] > thresh):
           I[y][x] = [0,0,255] 
-  if flag == 1:
-    cv2.imwrite('harrisfilter1'+str(thresh1)+'.jpg', I)
-    cv2.imshow('image', I)
-    cv2.waitKey(100000)
-  if flag == 2:
-    cv2.imwrite('HoShiThomas'+str(thresh2)+'.jpg', I)
-    cv2.imshow('image', I)
-    cv2.waitKey(100000)
+  cv2.imwrite(method+str(thresh)+'.jpg', I)
+    #cv2.imshow('image', I)
+    #cv2.waitKey(100000)
+    #cv2.imshow('image', I)
+    #cv2.waitKey(100000)
 
-harris('erimitage.jpg', 0.04, 4000 ,2)
+harris('erimitage.jpg', 0.04, 9000 ,1)
