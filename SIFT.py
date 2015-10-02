@@ -1,5 +1,3 @@
-#-*- coding: utf-8 -*-
-#siftthis.py
 from __future__ import division # CT: Tror vi behøver dette, så når vi skalere et billede skal vi bruge floor/ceil
 import scipy
 import numpy
@@ -113,15 +111,15 @@ def half_image(I):
 
 # NOTE: SIFT calls the "eliminating_edge_responses function, and shows
 # final picture
-def SIFT(Iname, r_mag):
+def SIFT(filename, r_mag):
   """
   Returns the interest points found
   """
-  I = cv2.imread(Iname)
+  I = cv2.imread(filename)
   I1 = half_image(I)
   I2 = half_image(I1)
   I3 = half_image(I2)
-  I_bw = cv2.imread(Iname, 0)
+  I_bw = cv2.imread(filename, 0)
   dim = I_bw.shape
   height = dim[0]
   length = dim[1]
@@ -144,13 +142,29 @@ def SIFT(Iname, r_mag):
   scipy.ndimage.filters.gaussian_filter(I_bw,sigma = sigma[4])
   ]
 
+
+  # test """"
+  """
+  cv2.imshow('image', o1sc[0])
+  cv2.waitKey(0)
+  cv2.imshow('image', o1sc[1])
+  cv2.waitKey(0)
+  cv2.imshow('image', o1sc[2])
+  cv2.waitKey(0)
+  cv2.imshow('image', o1sc[3])
+  cv2.waitKey(0)
+  cv2.imshow('image', o1sc[4])
+  cv2.waitKey(0)
+  """
+  # end of test """
+
+  """
   o2sc = [
   scipy.ndimage.filters.gaussian_filter(I_bw,sigma = sigma[2]),
   scipy.ndimage.filters.gaussian_filter(I_bw,sigma = sigma[3]),
   scipy.ndimage.filters.gaussian_filter(I_bw,sigma = sigma[4]),
   scipy.ndimage.filters.gaussian_filter(I_bw,sigma = sigma[5]),
   scipy.ndimage.filters.gaussian_filter(I_bw,sigma = sigma[6])]
-
   o3sc = [
   scipy.ndimage.filters.gaussian_filter(I_bw,sigma = sigma[4]),
   scipy.ndimage.filters.gaussian_filter(I_bw,sigma = sigma[5]),
@@ -158,7 +172,6 @@ def SIFT(Iname, r_mag):
   scipy.ndimage.filters.gaussian_filter(I_bw,sigma = sigma[7]),
   scipy.ndimage.filters.gaussian_filter(I_bw,sigma = sigma[8])
   ]
-
   o4sc = [
   scipy.ndimage.filters.gaussian_filter(I_bw,sigma = sigma[6]),
   scipy.ndimage.filters.gaussian_filter(I_bw,sigma = sigma[7]),
@@ -166,53 +179,33 @@ def SIFT(Iname, r_mag):
   scipy.ndimage.filters.gaussian_filter(I_bw,sigma = sigma[9]),
   scipy.ndimage.filters.gaussian_filter(I_bw,sigma = sigma[10])
   ]
-  
+  """
 
-  first = o1sc[0]
-  second = o1sc[1]
+  # Append for differnt scales of image
 
   DoG_scale1 = []
-  DoG_scale2 = []
-  DoG_scale3 = []
-  DoG_scale4 = []
-
-  D = numpy.zeros([height, length])
-  E = numpy.zeros([height, length])
-  for y in range(height):
-    for x in range(length):
-      E[y][x] = int(second[y][x]) - int(first[y][x])
-      if int(second[y][x]) - int(first[y][x]) <0:
-        D[y][x] = 0
-      else:
-        D[y][x] = int(second[y][x]) - int(first[y][x])
-  
-  #cv2.imshow('image', D)
-  #cv2.waitKey(0)
-  cv2.imwrite('F.jpg',  D)
-  cv2.imwrite('C.jpg',  E)
-  print "hey"
-  # Append for differnt scales of image
   for i in range(0, 4):
-    DoG_scale1.append(o1sc[i + 1] - o1sc[i])
-    DoG_scale2.append((half_image(o2sc[i+1]))-(half_image(o2sc[i])))
-    DoG_scale3.append((half_image(half_image(o3sc[i+1])))-\
-                     (half_image(half_image(o3sc[i]))))
-    DoG_scale4.append((half_image(half_image(half_image(o4sc[i+1]))))-\
-                     ((half_image(half_image(half_image(o4sc[i]))))))
+    DoG_scale1.append(h.matrix_substraction(o1sc[i + 1], o1sc[i]))
 
   dog1 = DoG_scale1[0]
   dog2 = DoG_scale1[1]
   dog3 = DoG_scale1[2]
   dog4 = DoG_scale1[3]
-  #cv2.imshow('image', dog1)
-  #cv2.waitKey(0)
-  #cv2.imshow('image', dog2)
-  #cv2.waitKey(0)
-  #cv2.imshow('image', dog3)
-  #cv2.waitKey(0)
-  #cv2.imshow('image', dog4)
-  #cv2.waitKey(0)
 
+  
+  """
+  cv2.imshow('image', dog1)
+  cv2.waitKey(0)
+  cv2.imshow('image', dog2)
+  cv2.waitKey(0)
+  cv2.imshow('image', dog3)
+  cv2.waitKey(0)
+  cv2.imshow('image', dog4)
+  cv2.waitKey(0)
+  # end of test
+  """
+  
+  """
   dog6 = DoG_scale2[0]
   dog7 = DoG_scale2[1]
   dog8 = DoG_scale2[2]
@@ -222,11 +215,11 @@ def SIFT(Iname, r_mag):
   dog12 = DoG_scale3[1]
   dog13 = DoG_scale3[2]
   dog14 = DoG_scale3[3]
-
   dog16 = DoG_scale4[0]
   dog17 = DoG_scale4[1]
   dog18 = DoG_scale4[2]
   dog19 = DoG_scale4[3]
+  """
    
   DoG_extrema_points_1_1 = []
   DoG_extrema_points_1_2 = []
@@ -250,27 +243,22 @@ def SIFT(Iname, r_mag):
       if (find_max(dog6, dog7, dog8, y, x) == 1):
         I1[y][x] = [0,0,255]
         DoG_extrema_points_2.append([x,y])
-
       if (find_max(dog7, dog8, dog9, y, x) == 1):
         I1[y][x] = [0,0,255]
         DoG_extrema_points_2.append([x,y])
-
   for y in range(3, height2 - 3):
     for x in range(3, length2 - 3):
       if (find_max(dog11, dog12, dog13, y, x) == 1):
         I2[y][x] = [0,0,255]
         DoG_extrema_points_3.append([x,y])
-
       if (find_max(dog12, dog13, dog14, y, x) == 1):
         I2[y][x] = [0,0,255]
         DoG_extrema_points_3.append([x,y])
-
   for y in range(3, height3 - 3):
     for x in range(3, length3 - 3):
       if (find_max(dog16, dog17, dog18, y, x) == 1):
         I3[y][x] = [0,0,255]
         DoG_extrema_points_4.append([x,y])
-
       if (find_max(dog17, dog18, dog19, y, x) == 1):
         I3[y][x] = [0,0,255]
         DoG_extrema_points_4.append([x,y])
@@ -283,29 +271,25 @@ def SIFT(Iname, r_mag):
 
   # eliminating edge responses
   [result1, tr2det1] = eliminating_edge_responses(dog2, \
-      [DoG_extrema_points_1_1], r_mag) 
+                    [DoG_extrema_points_1_1], r_mag) 
   [result2, tr2det2] = eliminating_edge_responses(dog3, \
-      [DoG_extrema_points_1_2], r_mag)
+                    [DoG_extrema_points_1_2], r_mag)
   result = numpy.concatenate((result1, result2), axis=0)
   tr2det = numpy.concatenate((tr2det1, tr2det2), axis=0)
   totxt = numpy.vstack([result.transpose(),tr2det]).transpose()
-  #h.points_to_txt(totxt, "interest_points.txt", "\n")
-  #with open('interest_points.txt', 'wb') as f:
-    #csv.writer(f, delimiter=' ').writerows(result)
+  h.points_to_txt(totxt, "interest_points.txt", "\n")
 
-  color_pic(I, result, "sift-"+ "r-" + str(r_mag) + ".jpg")
+  color_pic(I, result, filename[:-4] + "-sift-"+ "r-" + str(r_mag) + ".jpg")
 
 # input(I, points, name) - points are a list of [y, x] vals, name is optional,
 # but should be a string
 def color_pic(*arg):
   I = arg[0]
-  vals = arg[1]
+  points = arg[1]
 
   if (len(arg) >= 2):
-    for a in vals:
-      I[a[0]][a[1]] = [0,0,255]
-    #cv2.imshow('image', I)
-    #cv2.waitKey(0)
+    for p in points:
+      I[p[0]][p[1]] = [0,0,255]
 
   if (len(arg) == 3):
     name = arg[2]
@@ -369,4 +353,9 @@ def accurate_keypoint_localization(I, vals, window_size):
       """
   #print(final_mat)
 
-SIFT('erimitage2.jpg', 1.1)
+def test_SIFT(filename, r, increment, iterations):
+  for i in range(0, iterations):
+    SIFT(filename, r + (i * increment))
+    print(i)
+
+test_SIFT('erimitage2.jpg', 0.5, 0.1, 10)
