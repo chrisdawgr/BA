@@ -2,13 +2,19 @@ from __future__ import division
 import cv2
 import numpy
 import math
+import scipy
+import scipy.ndimage
+from scipy import misc
+from scipy import linalg as LA
 
-def harris(Iname, k, thresh):
+def harris(Iname, k, thresh,flag):
   """
   Input : An image, value k and threshold
   Output: Finds interest points using -
           the feature detecor method "Harris corner detector"
   """
+  thresh2 =  thresh # 9000
+  thresh1 = thresh # #200000000
   # Create empty image holders:
   I = cv2.imread(Iname)
   I_bw = cv2.imread(Iname, 0)
@@ -19,7 +25,6 @@ def harris(Iname, k, thresh):
 
   # Convolution masks for derivatives and smoothing:
   mask_dx = numpy.array([[-1,0,1],[-1,0,1],[-1,0,1]])
-  #mask_dx = numpy.array([-1,0,1])
   mask_dy = numpy.transpose(mask_dx)
   mask_gauss = numpy.array([[1,4,7,4,1],[4,16,26,16,4],[7,26,41,26,7],
                             [4,16,26,16,4],[1,4,7,4,1]])
@@ -41,39 +46,47 @@ def harris(Iname, k, thresh):
   # B = Iyy
   # C = Ixy
   # Remove noise, applying a gaussian filter:
-  Ixy = cv2.filter2D(Ixy, -1, mask_gauss)
-  Ixx = cv2.filter2D(Ixx, -1, mask_gauss)
-  Iyy = cv2.filter2D(Iyy, -1, mask_gauss)
-
+  #Ixy = cv2.filter2D(Ixy, -1, mask_gauss)
+  #Ixx = cv2.filter2D(Ixx, -1, mask_gauss)
+  #Iyy = cv2.filter2D(Iyy, -1, mask_gauss)
+  Ixy = scipy.ndimage.filters.gaussian_filter(Ixy,sigma = 0.7)
+  Ixx = scipy.ndimage.filters.gaussian_filter(Ixx,sigma = 0.7)
+  Iyy = scipy.ndimage.filters.gaussian_filter(Iyy,sigma = 0.7)
+  
   # Calculate R = Det -k * TR^2:
   for y in range(0, len(I_bw) ):
     for x in range(0, len(I_bw[0])):
       a = Ixx[y][x]
       b = Iyy[y][x]
       c = Ixy[y][x]
-      C[y][x] = (a*b - c**2) - k * (a + b)**2
+      # Harris method:
+      if flag == 1:
+        C[y][x] = (a*b - c**2) - k * (a + b)**2
+      # HoShiThomas method:  
+      if flag == 2:
+        M = numpy.array([[a, c],[c, b]])
+        e_vals, e_vecs = LA.eig(M)
+        e_vals = e_vals.real
+        C[y][x] = min(e_vals)
+      else:
+        return "Set flag to 1 for harris, 2 for shi-thomasi"  
   
   # Threshold values to perform edge hysteresis:
   for y in range(3, len(C)):
     for x in range(3, len(C[0])):
-      if (C[y][x] > thresh):
-        I[y][x] = [0,0,255]
+      if flag == 1:
+        if (C[y][x] > thresh1):
+          I[y][x] = [0,0,255]
+      if flag == 2:
+        if (C[y][x] > thresh2):
+          I[y][x] = [0,0,255] 
+  if flag == 1:
+    cv2.imwrite('harrisfilter1'+str(thresh1)+'.jpg', I)
+    cv2.imshow('image', I)
+    cv2.waitKey(100000)
+  if flag == 2:
+    cv2.imwrite('HoShiThomas'+str(thresh2)+'.jpg', I)
+    cv2.imshow('image', I)
+    cv2.waitKey(100000)
 
-  cv2.imwrite('erimitage-harris-cor.jpg', I)
-  cv2.imshow('image', I)
-  cv2.waitKey(100000)
-
-harris('erimitage.jpg', 0.04, 200000000)
-
-def gauss(size, sigma):
-  gauss_kernel = numpy.empty([size, size])
-  for y in range(0, size):
-    for x in range(0, size):
-      x1 = x - size/2 
-      y1 = y - size/2
-      gauss_kernel[y][x] = (1/(2 * math.pi * sigma**2)) * \
-                            math.e**(-(x1**2 + y1**2)/(2 * sigma**2))
-  return(gauss_kernel)
-
-#a = gauss(5,1) * 273
-#print(a)
+harris('erimitage.jpg', 0.04, 4000 ,2)
