@@ -1,5 +1,3 @@
-#-*- coding: utf-8 -*-
-#siftthis.py
 from __future__ import division # CT: Tror vi behøver dette, så når vi skalere et billede skal vi bruge floor/ceil
 import scipy
 import numpy
@@ -167,7 +165,6 @@ def SIFT(filename, r_mag):
   scipy.ndimage.filters.gaussian_filter(I_bw,sigma = sigma[4]),
   scipy.ndimage.filters.gaussian_filter(I_bw,sigma = sigma[5]),
   scipy.ndimage.filters.gaussian_filter(I_bw,sigma = sigma[6])]
-
   o3sc = [
   scipy.ndimage.filters.gaussian_filter(I_bw,sigma = sigma[4]),
   scipy.ndimage.filters.gaussian_filter(I_bw,sigma = sigma[5]),
@@ -175,7 +172,6 @@ def SIFT(filename, r_mag):
   scipy.ndimage.filters.gaussian_filter(I_bw,sigma = sigma[7]),
   scipy.ndimage.filters.gaussian_filter(I_bw,sigma = sigma[8])
   ]
-
   o4sc = [
   scipy.ndimage.filters.gaussian_filter(I_bw,sigma = sigma[6]),
   scipy.ndimage.filters.gaussian_filter(I_bw,sigma = sigma[7]),
@@ -219,7 +215,6 @@ def SIFT(filename, r_mag):
   dog12 = DoG_scale3[1]
   dog13 = DoG_scale3[2]
   dog14 = DoG_scale3[3]
-
   dog16 = DoG_scale4[0]
   dog17 = DoG_scale4[1]
   dog18 = DoG_scale4[2]
@@ -248,27 +243,22 @@ def SIFT(filename, r_mag):
       if (find_max(dog6, dog7, dog8, y, x) == 1):
         I1[y][x] = [0,0,255]
         DoG_extrema_points_2.append([x,y])
-
       if (find_max(dog7, dog8, dog9, y, x) == 1):
         I1[y][x] = [0,0,255]
         DoG_extrema_points_2.append([x,y])
-
   for y in range(3, height2 - 3):
     for x in range(3, length2 - 3):
       if (find_max(dog11, dog12, dog13, y, x) == 1):
         I2[y][x] = [0,0,255]
         DoG_extrema_points_3.append([x,y])
-
       if (find_max(dog12, dog13, dog14, y, x) == 1):
         I2[y][x] = [0,0,255]
         DoG_extrema_points_3.append([x,y])
-
   for y in range(3, height3 - 3):
     for x in range(3, length3 - 3):
       if (find_max(dog16, dog17, dog18, y, x) == 1):
         I3[y][x] = [0,0,255]
         DoG_extrema_points_4.append([x,y])
-
       if (find_max(dog17, dog18, dog19, y, x) == 1):
         I3[y][x] = [0,0,255]
         DoG_extrema_points_4.append([x,y])
