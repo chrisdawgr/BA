@@ -13,6 +13,7 @@ def magnitude(I, point):
   mag = math.sqrt((w[1][0] - w[1][2])**2 + (w[0][1] - w[2][1])**2)
   return(mag)
 
+
 def orientation(I, point):
   """
   Input : Image I, point point
@@ -21,13 +22,22 @@ def orientation(I, point):
   w = h.create_window(I, point, 3)
   Ly = w[0][1] - w[2][1]
   Lx = w[1][0] - w[1][2]
-  if (Lx != 0):
-    orien = math.atan(float(Ly)/float(Lx))
-    orien = math.degrees(orien)
-    if (orien < 0):
-      return(360 + orien)
-    return(orien)
-  return(0)
+  theta = 0.5 * math.pi - math.atan2(Lx, Ly)
+  theta = math.degrees(theta % (2 * math.pi))
+  return(theta)
+ 
+"""
+def orientation22(I, x, y):
+  Input : Image I, point point
+  Output: orientation of image
+  aatan2 = 0.5 * math.pi - math.atan2(x, y)
+  aatan2 = math.degrees(aatan2 % (2 * math.pi))
+  return(aatan2)
+"""
+
+
+
+
 
 def sift_orientation(I, points, window_size):
   """
@@ -42,24 +52,26 @@ def sift_orientation(I, points, window_size):
   min_point_size_y = window_size
   max_point_size_x = len(I[0]) - (window_size + 5)
   min_point_size_x = window_size 
+  gauss_window = h.gauss(window_size + 2, 1.5)
   hold = numpy.zeros([1,36])
+
 
   # length of outer list
   o = 0
   for p in points:
-    if ((p[0] <= max_point_size_y and p[0] >= min_point_size_y)) and \
-        (p[1] <= max_point_size_x and p[1] >= min_point_size_x):
+    if ((p[0] < max_point_size_y and min_point_size_y < p[0]) and \
+        (p[1] < max_point_size_x and min_point_size_x < p[1])):
+        #(pp[1] < max_point_size_x and min_point_size_x < pp[1])):
       o += 1
 
   # size of all usable points o
-  bins = numpy.zeros([o, 1, 36])
-  gauss_window = h.gauss(window_size + 2, 1.5)
+  bins = numpy.zeros([o,  1, 36])
+  
 
   for p in points:
     # if a point is too close to the border of the image, it is discarded
-    #print(i)
-    if ((p[0] <= max_point_size_y and p[0] >= min_point_size_y)) and \
-        (p[1] <= max_point_size_x and p[1] >= min_point_size_x):
+    if ((p[0] < max_point_size_y and p[0] > min_point_size_y) and \
+        (p[1] < max_point_size_x and p[1] > min_point_size_x)):
 
         ip_window = h.create_window(I, p, window_size + 2) 
         ip_window = numpy.multiply(ip_window, gauss_window)
@@ -71,16 +83,26 @@ def sift_orientation(I, points, window_size):
             magnitude_p = magnitude(ip_window, [y + 1, x + 1])
             orientation_p = orientation(ip_window, [y + 1, x + 1])
             bins[i][0][math.floor(orientation_p /10.0)] += magnitude_p
-            hold[0][math.floor(orientation_p /10.0)] += 1
+            #hold[0][math.floor(orientation_p /10.0)] += 1
 
             #print(str([y, x]) + " " + "magnitude: " + str(magnitude_p) \
             #    + " " + "orientation: " + str(orientation_p))
 
         i += 1
-  h.points_to_txt(bins, "bins_for_orientation.txt")
-  print(hold)
+  h.points_to_txt2(bins, "bins_for_orientation.txt", "\n\n")
 
-  
 I = cv2.imread('erimitage2.jpg', 0)
+
+
+"""
+print(orientation22(I, 1, 0))
+print(orientation22(I, 1, 1))
+print(orientation22(I, 0, 1))
+print(orientation22(I, -1, 1))
+print(orientation22(I, -1, 0))
+print(orientation22(I, -1, -1))
+print(orientation22(I, 0, -1))
+print(orientation22(I, 1, -1))
+"""
 points = h.txt_to_points('interest_points.txt')
 sift_orientation(I, points, 19)
