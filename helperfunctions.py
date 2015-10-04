@@ -37,26 +37,74 @@ def create_window(I, point, window_size):
   return(D)
 
 
-def points_to_txt(points, filename_out):
+def points_to_txt(points, filename_out, seperate_by):
+  """
+  input = points, filename to output, how to seperate the lists, eg "\n", "\t", "\n\n" etc
+  output = file with filename_out with the points
+  """
   file_o = open(filename_out, 'w')
 
   for i in points:
-    file_o.write(str(i))
-    file_o.write('\n\n')
+    file_o.write(str(i[0]) + " " + str(i[1]))
+    file_o.write(seperate_by)
   file_o.close()
 
-def txt_to_points(file):
+def txt_to_points(filename):
   result = []
-  oo = open(file, "r")
+  oo = open(filename, "r")
   points_str = oo.read()
   oo.close()
   points_str = points_str.split()
 
-  for i in points_str:
-    result.append([int(i), int(i) + 1])
+  for i in range(0, len(points_str), 2):
+    result.append([points_str[i], points_str[i + 1]])
 
   return result
 
+
+def points_to_txt2(points, filename_out, seperate_by):
+  """
+  input = points, filename to output, how to seperate the lists, eg "\n", "\t", "\n\n" etc
+  output = file with filename_out with the points
+  """
+  file_o = open(filename_out, 'w')
+
+  for i in points:
+    #print(i)
+    file_o.write(str(i))
+    file_o.write(seperate_by)
+  file_o.close()
+
+def txt_to_points(filename):
+  result = []
+  oo = open(filename, "r")
+  points_str = oo.read()
+  oo.close()
+  points_str = points_str.split()
+
+  for i in range(0, len(points_str), 2):
+    result.append([int(points_str[i]), int(points_str[i + 1])])
+
+  return result
+
+
+
+
+
+def matrix_substraction(m1, m2):
+  dim = m1.shape
+  height = dim[0]
+  length = dim[1]
+  mat = numpy.zeros([height, length], dtype='uint8')
+  for y in range (0, height):
+    for x in range(0, length):
+      if (m1[y][x] < m2[y][x]):
+        mat[y][x] = 0
+      else:
+        mat[y][x] = m1[y][x] - m2[y][x]
+  return(mat)
+
+      
 
 
 """
@@ -76,3 +124,9 @@ D = create_window(I, [79,247], 5)
 print(D)
 print("end of D \n\n")
 """
+
+
+def test_SIFT(filename, r, iterations, increment):
+  for i in range(0, iterations):
+    sift.SIFT(filename, r + (i * increment))
+

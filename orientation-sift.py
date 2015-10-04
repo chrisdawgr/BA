@@ -47,7 +47,6 @@ def sift_orientation(I, points, window_size):
 
   # point with orientation; [[y, x],[o1, o2, o3]]
   pwo = []
-  i = 0
   max_point_size_y = len(I) - (window_size + 2)
   min_point_size_y = window_size
   max_point_size_x = len(I[0]) - (window_size + 5)
@@ -83,12 +82,26 @@ def sift_orientation(I, points, window_size):
             magnitude_p = magnitude(ip_window, [y + 1, x + 1])
             orientation_p = orientation(ip_window, [y + 1, x + 1])
             bins[i][0][math.floor(orientation_p /10.0)] += magnitude_p
+        bin_i = bins[i][0]
+        
+        # index of max element in bin
+        max_index = max(bin_i)
+        max_index = [i for i, j in enumerate(bin_i) if j == max_index]
+        
+        # finds points within 80% of interest point
+        #TODO
+        """
+        orien = [max_index]
+        for i in range(0, 36)
+          if (bin_i[i] >= maxbin * 0.8):
+            orien.append(bin_i[i])
+
             #hold[0][math.floor(orientation_p /10.0)] += 1
 
             #print(str([y, x]) + " " + "magnitude: " + str(magnitude_p) \
             #    + " " + "orientation: " + str(orientation_p))
 
-        i += 1
+        """
   h.points_to_txt2(bins, "bins_for_orientation.txt", "\n\n")
 
 I = cv2.imread('erimitage2.jpg', 0)
