@@ -1,4 +1,4 @@
-from __future__ import division # CT: Tror vi behøver dette, så når vi skalere et billede skal vi bruge floor/ceil
+from __future__ import division
 import scipy
 import numpy
 import scipy.ndimage
@@ -18,7 +18,7 @@ def find_max(dog1, dog2, dog3, y, x):
   Determines if the given point(y,x) is a maximum or minimum point
   among it's 26 neighbours, in the scale above and below it.
   """
-  point = dog2[1][1]
+  point = dog2[1][1] # Shouldnt this come after create window ??
 
   dog1 = h.create_window(dog1, [y, x], 3)
   dog2 = h.create_window(dog2, [y, x], 3)
@@ -27,19 +27,50 @@ def find_max(dog1, dog2, dog3, y, x):
   # Create array of neighbouring points 
   dog_points = numpy.array([dog1, dog2, dog3])
   dog_points = dog_points.reshape(-1)            # make 1-dimensional
-  pointMin = min(dog_points)
-  pointMax = max(dog_points)
   dog_points = numpy.delete(dog_points, 13)      # CT: Delete point [1][1]
   scndMin = min(dog_points)
   scndMax = max(dog_points)
   scndAvg = getaverage(dog_points)
   #average = getaverage(dog_points)
-
+  """
   if (point > scndMax) or (point < scndMin):
     return 1
   else:
     return 0 
-  
+  """
+  if (point > scndMax) or (point < scndMin):
+    return 1
+  else:
+    return 0
+  """
+  #dx = (dog2[y][x+1] - dog2[x][y-1])*0.5 /255
+  dx = (dog2[1][2] - dog2[1][0])*0.5 /255
+  #dy = (dog2[y+1][x]- dog2[y-1][x]) * 0.5 / 255
+  dy = (dog2[2][1]- dog2[0][1]) * 0.5 / 255
+  #ds = (dog3[y][x]- dog1[y][x])*0.5/255 
+  ds = (dog3[1][1]- dog1[1][1])*0.5/255 
+  #dxx = (dog2[y][x+1] + dog2[y][x-1] - 2 * dog2[y][x]) * 1.0 / 255
+  dxx = (dog2[1][2] + dog2[1][0] - 2 * dog2[1][1]) * 1.0 / 255
+  #dyy = (dog2[y+1][x] + dog2[y-1][x] - 2 * dog2[y][x]) * 1.0 / 255   
+  dyy = (dog2[2][1] + dog2[0][1] - 2 * dog2[1][1]) * 1.0 / 255   
+  #dss = (dog3[y][x] + dog1[y][x] - 2 *dog2[y][x]) * 1.0 / 255
+  dss = (dog3[1][1] + dog1[1][1] - 2 *dog2[1][1]) * 1.0 / 255
+  #dxy = (dog2[y+1][x+1] - dog2[y+1][x-1] - dog2[y-1][x+1] + dog2[y-1][x-1]) * 0.25 / 255 
+  dxy = (dog2[2][2] - dog2[2][0] - dog2[0][2] + dog2[0][0]) * 0.25 / 255 
+  #dxs = (dog3[y][x+1] - dog3[y][x-1] - dog1[y][x+1] + dog1[y][x-1]) * 0.25 / 255
+  dxs = (dog3[1][2] - dog3[1][0] - dog1[1][2] + dog1[1][0]) * 0.25 / 255
+  #dys = (dog3[y+1][x] - dog3[y-1][x] - dog1[y+1][x] + dog1[y-1][x]) * 0.25 / 255  
+  dys = (dog3[2][1] - dog3[0][1] - dog1[2][1] + dog1[0][1]) * 0.25 / 255  
+
+  dD = numpy.matrix([[dx], [dy], [ds]])
+  H = numpy.matrix([[dxx, dxy, dxs], [dxy, dyy, dys], [dxs, dys, dss]])
+  x_hat = numpy.linalg.lstsq(H, dD)[0]
+  D_x_hat = dog2[y][x] + 0.5 * numpy.dot(dD.transpose(), x_hat)
+
+  r = 10.0
+  if ((((dxx + dyy) ** 2) * r) < (dxx * dyy - (dxy ** 2)) * (((r + 1) ** 2))) and (numpy.absolute(x_hat[0]) < 0.5) and (numpy.absolute(x_hat[1]) < 0.5) and (numpy.absolute(x_hat[2]) < 0.5) and (numpy.absolute(D_x_hat) > 0.03):
+    return 1
+  """
   """
   i = 0
   maxi = 0
@@ -71,37 +102,68 @@ def eliminating_edge_responses(I, points, r):
     D = h.create_window(I, first_points[i], 3)
 
     # calculation of the derivaties of D in x, y, xx, yy, yx direction
-    mask_dxx = numpy.array([[0, 0,  0], \
-                            [1, -2, 1], \
-                            [0, 0,  0]])
+    #mask_dxx = numpy.array([[0, 0,  0], \
+    #                        [1, -2, 1], \
+    #                        [0, 0,  0]])
 
-    mask_dyy = mask_dxx.transpose()
+    #dx = (dog2[y][x+1] - dog2[x][y-1])*0.5 /255
+    dx = (D[1][2] - D[1][0])*0.5 /255
+    #dy = (dog2[y+1][x]- dog2[y-1][x]) * 0.5 / 255
+    dy = (D[2][1]- D[0][1]) * 0.5 / 255
+    #ds = (dog3[y][x]- dog1[y][x])*0.5/255 
+    #ds = (dog3[1][1]- dog1[1][1])*0.5/255 
+    #dxx = (dog2[y][x+1] + dog2[y][x-1] - 2 * dog2[y][x]) * 1.0 / 255
+    dxx = (D[1][2] + D[1][0] - 2 * D[1][1]) * 1.0 / 255
+    #dyy = (dog2[y+1][x] + dog2[y-1][x] - 2 * dog2[y][x]) * 1.0 / 255   
+    dyy = (D[2][1] + D[0][1] - 2 * D[1][1]) * 1.0 / 255   
+    #dss = (dog3[y][x] + dog1[y][x] - 2 *dog2[y][x]) * 1.0 / 255
+    #dss = (dog3[1][1] + dog1[1][1] - 2 *dog2[1][1]) * 1.0 / 255
+    #dxy = (dog2[y+1][x+1] - dog2[y+1][x-1] - dog2[y-1][x+1] + dog2[y-1][x-1]) * 0.25 / 255 
+    dxy = (D[2][2] - D[2][0] - D[0][2] + D[0][0]) * 0.25 / 255 
+    #dxs = (dog3[y][x+1] - dog3[y][x-1] - dog1[y][x+1] + dog1[y][x-1]) * 0.25 / 255
+    #dxs = (dog3[1][2] - dog3[1][0] - dog1[1][2] + dog1[1][0]) * 0.25 / 255
+    #dys = (dog3[y+1][x] - dog3[y-1][x] - dog1[y+1][x] + dog1[y-1][x]) * 0.25 / 255  
+    #dys = (dog3[2][1] - dog3[0][1] - dog1[2][1] + dog1[0][1]) * 0.25 / 255  
 
-    Dxx = numpy.multiply(D, mask_dxx)
-    Dxx = Dxx.sum()
+    #mask_dyy = mask_dxx.transpose()
 
-    Dyy = numpy.multiply(D, mask_dyy)
-    Dyy = Dyy.sum()
-    Dxy = D[2][2] - D[0][2] - D[2][0] + D[0][0]
+    #Dxx = numpy.multiply(D, mask_dxx)
+    #Dxx = Dxx.sum()
+
+    #Dyy = numpy.multiply(D, mask_dyy)
+    #Dyy = Dyy.sum()
+    #Dxy = D[2][2] - D[0][2] - D[2][0] + D[0][0]
+
 
     # The Hessian matrix
     # NOTE: when Dxy and Dyx are calculated individually, the
     # result on erimitage.jpg is MUCH better
-    D_hessian = numpy.array([[Dxx, Dxy], \
-                             [Dxy, Dyy]])
+    #D_hessian = numpy.array([[Dxx, Dxy], \
+    #                         [Dxy, Dyy]])
     # trace and determinant of the Hessian matrix
-    tr = Dxx + Dyy
-    det = numpy.linalg.det(D_hessian)
+
+    dD = numpy.matrix([[dx], [dy]])
+    H = numpy.matrix([[dxx, dxy], [dxy, dyy]])
+    x_hat = numpy.linalg.lstsq(H, dD)[0]
+    D_x_hat = D[1][1] + 0.5 * numpy.dot(dD.transpose(), x_hat)
+    tr = dxx + dyy
+    det = numpy.linalg.det(H)
+    # (float(tr)**2 / float(det) < float((r+1)**2) / float(r))
+    if (det > 0):
+      if ((((dxx + dyy) ** 2) * r) < (dxx * dyy - (dxy ** 2)) * (((r + 1) ** 2))) and (numpy.absolute(x_hat[0]) < 0.5) and (numpy.absolute(x_hat[1]) < 0.5) and (numpy.absolute(D_x_hat) > 0.03):
+        result.append(first_points[i])
+        tr2det.append(float(tr)**2 / float(det))
+  return(result, tr2det)
 
     # if the determinant is 0, the calculation trace^2/det is invalid,
     # thus an initial check is needed. 
     # The second if, is the check tr^2/det < (r+1)^2/r.
     # in SIFT, the r value is 10
-    if (det > 0):
-      if (float(tr)**2 / float(det) < float((r+1)**2) / float(r)):
-        result.append(first_points[i])
-        tr2det.append(float(tr)**2 / float(det))
-  return(result, tr2det)
+    #if (det > 0):
+      #if (float(tr)**2 / float(det) < float((r+1)**2) / float(r)):
+        #result.append(first_points[i])
+        #tr2det.append(float(tr)**2 / float(det))
+  #return(result, tr2det)
 
 def half_image(I):
   """
@@ -115,48 +177,40 @@ def SIFT(filename, r_mag):
   """
   Returns the interest points found
   """
+  s = 3
+  k = 2 ** (1.0 / s)
   I = cv2.imread(filename)
-  I1 = half_image(I)
-  I2 = half_image(I1)
-  I3 = half_image(I2)
+  #I1 = half_image(I)
+  #I2 = half_image(I1)
+  #I3 = half_image(I2)
   I_bw = cv2.imread(filename, 0)
   dim = I_bw.shape
   height = dim[0]
   length = dim[1]
-  height1 = len(I1)
-  length1 = len(I1[1])
-  height2 = len(I2)
-  length2 = len(I2[1])    
-  height3 = len(I3)
-  length3 = len(I3[1])
+  #height1 = len(I1)
+  #length1 = len(I1[1])
+  #height2 = len(I2)
+  #length2 = len(I2[1])    
+  #height3 = len(I3)
+  #length3 = len(I3[1])
   
-  sigma = [math.sqrt(0.5), math.sqrt(1), math.sqrt(2), math.sqrt(4),
-           math.sqrt(8), math.sqrt(16), math.sqrt(32), math.sqrt(64),
-           math.sqrt(128), math.sqrt(256), math.sqrt(512)]
+  #sigma1 = [math.sqrt(0.5), math.sqrt(1), math.sqrt(2), math.sqrt(4),
+  #         math.sqrt(8), math.sqrt(16), math.sqrt(32), math.sqrt(64),
+  #         math.sqrt(128), math.sqrt(256), math.sqrt(512)]
+  sigma1 = numpy.array([1.3, 1.6, 1.6 * k, 1.6 * (k ** 2), 1.6 * (k ** 3), 1.6 * (k ** 4)])
+
+  #o1sctest = list(numpy.zeros((I.shape[0], I.shape[1], 6)))
+
+  #for i in range(0, 6):
+    #o1sctest[i] = scipy.ndimage.filters.gaussian_filter(I, sigma = sigma1[i])
 
   o1sc = [
-  scipy.ndimage.filters.gaussian_filter(I_bw,sigma = sigma[0]),
-  scipy.ndimage.filters.gaussian_filter(I_bw,sigma = sigma[1]),
-  scipy.ndimage.filters.gaussian_filter(I_bw,sigma = sigma[2]),
-  scipy.ndimage.filters.gaussian_filter(I_bw,sigma = sigma[3]),
-  scipy.ndimage.filters.gaussian_filter(I_bw,sigma = sigma[4])
+  scipy.ndimage.filters.gaussian_filter(I_bw,sigma = sigma1[0]),
+  scipy.ndimage.filters.gaussian_filter(I_bw,sigma = sigma1[1]),
+  scipy.ndimage.filters.gaussian_filter(I_bw,sigma = sigma1[2]),
+  scipy.ndimage.filters.gaussian_filter(I_bw,sigma = sigma1[3]),
+  scipy.ndimage.filters.gaussian_filter(I_bw,sigma = sigma1[4])
   ]
-
-
-  # test """"
-  """
-  cv2.imshow('image', o1sc[0])
-  cv2.waitKey(0)
-  cv2.imshow('image', o1sc[1])
-  cv2.waitKey(0)
-  cv2.imshow('image', o1sc[2])
-  cv2.waitKey(0)
-  cv2.imshow('image', o1sc[3])
-  cv2.waitKey(0)
-  cv2.imshow('image', o1sc[4])
-  cv2.waitKey(0)
-  """
-  # end of test """
 
   """
   o2sc = [
@@ -192,19 +246,7 @@ def SIFT(filename, r_mag):
   dog3 = DoG_scale1[2]
   dog4 = DoG_scale1[3]
 
-  
-  """
-  cv2.imshow('image', dog1)
-  cv2.waitKey(0)
-  cv2.imshow('image', dog2)
-  cv2.waitKey(0)
-  cv2.imshow('image', dog3)
-  cv2.waitKey(0)
-  cv2.imshow('image', dog4)
-  cv2.waitKey(0)
-  # end of test
-  """
-  
+    
   """
   dog6 = DoG_scale2[0]
   dog7 = DoG_scale2[1]
@@ -230,12 +272,15 @@ def SIFT(filename, r_mag):
   for y in range(3, height - 3):
     for x in range(3, length - 3):
       if (find_max(dog1, dog2, dog3, y, x) == 1):
-        #I[y][x] = [0,0,255]
+        I[y][x] = [0,0,255]
         DoG_extrema_points_1_1.append([y,x])
 
       if (find_max(dog2, dog3, dog4, y, x) == 1):
-        #I[y][x] = [0,0,255]
+        I[y][x] = [0,0,255]
         DoG_extrema_points_1_2.append([y,x])
+
+  #cv2.imshow('image', I)
+  #cv2.waitKey(0)
 
   """
   for y in range(3, height1 - 3):
@@ -268,12 +313,14 @@ def SIFT(filename, r_mag):
 
   # cv2.imwrite('erimitage2.jpg',  I)
   vals = [DoG_extrema_points_1_1, DoG_extrema_points_1_2]
-
+  print "eliminating edge responses and performing accurate keypoint localization"
   # eliminating edge responses
   [result1, tr2det1] = eliminating_edge_responses(dog2, \
                     [DoG_extrema_points_1_1], r_mag) 
   [result2, tr2det2] = eliminating_edge_responses(dog3, \
                     [DoG_extrema_points_1_2], r_mag)
+  (result1)
+  print len(result2)
   result = numpy.concatenate((result1, result2), axis=0)
   tr2det = numpy.concatenate((tr2det1, tr2det2), axis=0)
   totxt = numpy.vstack([result.transpose(),tr2det]).transpose()
@@ -352,10 +399,10 @@ def accurate_keypoint_localization(I, vals, window_size):
           
       """
   #print(final_mat)
-
 def test_SIFT(filename, r, increment, iterations):
   for i in range(0, iterations):
     SIFT(filename, r + (i * increment))
     print(i)
+test_SIFT('erimitage2.jpg', 0.1, 0.1, 15)
 
-test_SIFT('erimitage2.jpg', 0.5, 0.1, 10)
+#SIFT('erimitage.jpg', 10)
