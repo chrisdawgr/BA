@@ -18,11 +18,11 @@ def find_max(dog1, dog2, dog3, y, x):
   Determines if the given point(y,x) is a maximum or minimum point
   among it's 26 neighbours, in the scale above and below it.
   """
-  point = dog2[1][1] # Shouldnt this come after create window ??
 
   dog1 = h.create_window(dog1, [y, x], 3)
   dog2 = h.create_window(dog2, [y, x], 3)
   dog3 = h.create_window(dog3, [y, x], 3)
+  point = dog2[1][1] # Shouldnt this come after create window ??
   
   # Create array of neighbouring points 
   dog_points = numpy.array([dog1, dog2, dog3])
@@ -102,37 +102,42 @@ def eliminating_edge_responses(I, points, r):
     D = h.create_window(I, first_points[i], 3)
 
     # calculation of the derivaties of D in x, y, xx, yy, yx direction
-    #mask_dxx = numpy.array([[0, 0,  0], \
-    #                        [1, -2, 1], \
-    #                        [0, 0,  0]])
+    mask_dxx = numpy.array([[0, 0,  0], \
+                            [1, -2, 1], \
+                            [0, 0,  0]])
 
     #dx = (dog2[y][x+1] - dog2[x][y-1])*0.5 /255
-    dx = (D[1][2] - D[1][0])*0.5 /255
+    
+    dx = (D[1][2] - D[1][0]) #*0.5 /255
     #dy = (dog2[y+1][x]- dog2[y-1][x]) * 0.5 / 255
-    dy = (D[2][1]- D[0][1]) * 0.5 / 255
+    
+    dy = (D[2][1]- D[0][1])# * 0.5 / 255
     #ds = (dog3[y][x]- dog1[y][x])*0.5/255 
     #ds = (dog3[1][1]- dog1[1][1])*0.5/255 
     #dxx = (dog2[y][x+1] + dog2[y][x-1] - 2 * dog2[y][x]) * 1.0 / 255
-    dxx = (D[1][2] + D[1][0] - 2 * D[1][1]) * 1.0 / 255
+    
+    #dxx = (D[1][2] + D[1][0] - 2 * D[1][1])# * 1.0 / 255
     #dyy = (dog2[y+1][x] + dog2[y-1][x] - 2 * dog2[y][x]) * 1.0 / 255   
-    dyy = (D[2][1] + D[0][1] - 2 * D[1][1]) * 1.0 / 255   
+    
+    #dyy = (D[2][1] + D[0][1] - 2 * D[1][1])# * 1.0 / 255   
     #dss = (dog3[y][x] + dog1[y][x] - 2 *dog2[y][x]) * 1.0 / 255
     #dss = (dog3[1][1] + dog1[1][1] - 2 *dog2[1][1]) * 1.0 / 255
     #dxy = (dog2[y+1][x+1] - dog2[y+1][x-1] - dog2[y-1][x+1] + dog2[y-1][x-1]) * 0.25 / 255 
-    dxy = (D[2][2] - D[2][0] - D[0][2] + D[0][0]) * 0.25 / 255 
+    
+    #dxy = (D[2][2] - D[2][0] - D[0][2] + D[0][0])# * 0.25 / 255 
     #dxs = (dog3[y][x+1] - dog3[y][x-1] - dog1[y][x+1] + dog1[y][x-1]) * 0.25 / 255
     #dxs = (dog3[1][2] - dog3[1][0] - dog1[1][2] + dog1[1][0]) * 0.25 / 255
     #dys = (dog3[y+1][x] - dog3[y-1][x] - dog1[y+1][x] + dog1[y-1][x]) * 0.25 / 255  
     #dys = (dog3[2][1] - dog3[0][1] - dog1[2][1] + dog1[0][1]) * 0.25 / 255  
 
-    #mask_dyy = mask_dxx.transpose()
+    mask_dyy = mask_dxx.transpose()
 
-    #Dxx = numpy.multiply(D, mask_dxx)
-    #Dxx = Dxx.sum()
+    Dxx = numpy.multiply(D, mask_dxx)
+    Dxx = Dxx.sum()
 
-    #Dyy = numpy.multiply(D, mask_dyy)
-    #Dyy = Dyy.sum()
-    #Dxy = D[2][2] - D[0][2] - D[2][0] + D[0][0]
+    Dyy = numpy.multiply(D, mask_dyy)
+    Dyy = Dyy.sum()
+    Dxy = D[2][2] - D[0][2] - D[2][0] + D[0][0]
 
 
     # The Hessian matrix
@@ -143,16 +148,18 @@ def eliminating_edge_responses(I, points, r):
     # trace and determinant of the Hessian matrix
 
     dD = numpy.matrix([[dx], [dy]])
-    H = numpy.matrix([[dxx, dxy], [dxy, dyy]])
+    H = numpy.matrix([[Dxx, Dxy], [Dxy, Dyy]])
     x_hat = numpy.linalg.lstsq(H, dD)[0]
     D_x_hat = D[1][1] + 0.5 * numpy.dot(dD.transpose(), x_hat)
-    tr = dxx + dyy
+    tr = Dxx + Dyy
     det = numpy.linalg.det(H)
     # (float(tr)**2 / float(det) < float((r+1)**2) / float(r))
-    if (det > 0):
-      if ((((dxx + dyy) ** 2) * r) < (dxx * dyy - (dxy ** 2)) * (((r + 1) ** 2))) and (numpy.absolute(x_hat[0]) < 0.5) and (numpy.absolute(x_hat[1]) < 0.5) and (numpy.absolute(D_x_hat) > 0.03):
+    # ((((dxx + dyy) ** 2) * r) < (dxx * dyy - (dxy ** 2)) * (((r + 1) ** 2)))
+    if (det != 0):
+      if (float(tr)**2 / float(det) < float((r+1)**2) / float(r)) and (numpy.absolute(x_hat[0]) < 1) and (numpy.absolute(x_hat[1]) < 1) and (numpy.absolute(D_x_hat) > 0.03):
         result.append(first_points[i])
         tr2det.append(float(tr)**2 / float(det))
+  #print "Result: ", result
   return(result, tr2det)
 
     # if the determinant is 0, the calculation trace^2/det is invalid,
@@ -194,10 +201,10 @@ def SIFT(filename, r_mag):
   #height3 = len(I3)
   #length3 = len(I3[1])
   
-  #sigma1 = [math.sqrt(0.5), math.sqrt(1), math.sqrt(2), math.sqrt(4),
-  #         math.sqrt(8), math.sqrt(16), math.sqrt(32), math.sqrt(64),
-  #         math.sqrt(128), math.sqrt(256), math.sqrt(512)]
-  sigma1 = numpy.array([1.3, 1.6, 1.6 * k, 1.6 * (k ** 2), 1.6 * (k ** 3), 1.6 * (k ** 4)])
+  sigma1 = [math.sqrt(0.5), math.sqrt(1), math.sqrt(2), math.sqrt(4),
+           math.sqrt(8), math.sqrt(16), math.sqrt(32), math.sqrt(64),
+           math.sqrt(128), math.sqrt(256), math.sqrt(512)]
+  #sigma1 = numpy.array([1.3, 1.6, 1.6 * k, 1.6 * (k ** 2), 1.6 * (k ** 3), 1.6 * (k ** 4)])
 
   #o1sctest = list(numpy.zeros((I.shape[0], I.shape[1], 6)))
 
@@ -319,8 +326,7 @@ def SIFT(filename, r_mag):
                     [DoG_extrema_points_1_1], r_mag) 
   [result2, tr2det2] = eliminating_edge_responses(dog3, \
                     [DoG_extrema_points_1_2], r_mag)
-  (result1)
-  print len(result2)
+
   result = numpy.concatenate((result1, result2), axis=0)
   tr2det = numpy.concatenate((tr2det1, tr2det2), axis=0)
   totxt = numpy.vstack([result.transpose(),tr2det]).transpose()
@@ -403,6 +409,6 @@ def test_SIFT(filename, r, increment, iterations):
   for i in range(0, iterations):
     SIFT(filename, r + (i * increment))
     print(i)
-test_SIFT('erimitage2.jpg', 0.1, 0.1, 15)
+test_SIFT('erimitage2.jpg', 2, 2, 15)
 
 #SIFT('erimitage.jpg', 10)
