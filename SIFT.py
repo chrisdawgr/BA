@@ -18,72 +18,36 @@ def find_max(dog1, dog2, dog3, y, x):
   Determines if the given point(y,x) is a maximum or minimum point
   among it's 26 neighbours, in the scale above and below it.
   """
+  #point = dog2[y][x]
 
   dog1 = h.create_window(dog1, [y, x], 3)
   dog2 = h.create_window(dog2, [y, x], 3)
   dog3 = h.create_window(dog3, [y, x], 3)
-  point = dog2[1][1] # Shouldnt this come after create window ??
-  
+  point = dog2[1][1]
+
+  # Shouldnt this come after create window ??
+
   # Create array of neighbouring points 
   dog_points = numpy.array([dog1, dog2, dog3])
   dog_points = dog_points.reshape(-1)            # make 1-dimensional
   dog_points = numpy.delete(dog_points, 13)      # CT: Delete point [1][1]
-  scndMin = min(dog_points)
-  scndMax = max(dog_points)
-  scndAvg = getaverage(dog_points)
+  #scndMin = min(dog_points)
+  #scndMax = max(dog_points)
+  #scndAvg = getaverage(dog_points)
   #average = getaverage(dog_points)
-  """
-  if (point > scndMax) or (point < scndMin):
-    return 1
-  else:
-    return 0 
-  """
-  if (point > scndMax) or (point < scndMin):
-    return 1
-  else:
-    return 0
-  """
-  #dx = (dog2[y][x+1] - dog2[x][y-1])*0.5 /255
-  dx = (dog2[1][2] - dog2[1][0])*0.5 /255
-  #dy = (dog2[y+1][x]- dog2[y-1][x]) * 0.5 / 255
-  dy = (dog2[2][1]- dog2[0][1]) * 0.5 / 255
-  #ds = (dog3[y][x]- dog1[y][x])*0.5/255 
-  ds = (dog3[1][1]- dog1[1][1])*0.5/255 
-  #dxx = (dog2[y][x+1] + dog2[y][x-1] - 2 * dog2[y][x]) * 1.0 / 255
-  dxx = (dog2[1][2] + dog2[1][0] - 2 * dog2[1][1]) * 1.0 / 255
-  #dyy = (dog2[y+1][x] + dog2[y-1][x] - 2 * dog2[y][x]) * 1.0 / 255   
-  dyy = (dog2[2][1] + dog2[0][1] - 2 * dog2[1][1]) * 1.0 / 255   
-  #dss = (dog3[y][x] + dog1[y][x] - 2 *dog2[y][x]) * 1.0 / 255
-  dss = (dog3[1][1] + dog1[1][1] - 2 *dog2[1][1]) * 1.0 / 255
-  #dxy = (dog2[y+1][x+1] - dog2[y+1][x-1] - dog2[y-1][x+1] + dog2[y-1][x-1]) * 0.25 / 255 
-  dxy = (dog2[2][2] - dog2[2][0] - dog2[0][2] + dog2[0][0]) * 0.25 / 255 
-  #dxs = (dog3[y][x+1] - dog3[y][x-1] - dog1[y][x+1] + dog1[y][x-1]) * 0.25 / 255
-  dxs = (dog3[1][2] - dog3[1][0] - dog1[1][2] + dog1[1][0]) * 0.25 / 255
-  #dys = (dog3[y+1][x] - dog3[y-1][x] - dog1[y+1][x] + dog1[y-1][x]) * 0.25 / 255  
-  dys = (dog3[2][1] - dog3[0][1] - dog1[2][1] + dog1[0][1]) * 0.25 / 255  
 
-  dD = numpy.matrix([[dx], [dy], [ds]])
-  H = numpy.matrix([[dxx, dxy, dxs], [dxy, dyy, dys], [dxs, dys, dss]])
-  x_hat = numpy.linalg.lstsq(H, dD)[0]
-  D_x_hat = dog2[y][x] + 0.5 * numpy.dot(dD.transpose(), x_hat)
-
-  r = 10.0
-  if ((((dxx + dyy) ** 2) * r) < (dxx * dyy - (dxy ** 2)) * (((r + 1) ** 2))) and (numpy.absolute(x_hat[0]) < 0.5) and (numpy.absolute(x_hat[1]) < 0.5) and (numpy.absolute(x_hat[2]) < 0.5) and (numpy.absolute(D_x_hat) > 0.03):
-    return 1
-  """
-  """
   i = 0
   maxi = 0
   mini = 0
-  for i in range(0,25):
+  while(maxi == 0 or mini == 0):
     if dog_points[i] > point:
       maxi = 1
     if dog_points[i] < point:
-      mini = 1  
-    if (maxi == 1 and mini == 1):
-      return 0
+      mini = 1
+    i += 1
+    if (i == 26):
+      return 1
   return 0
-  """
 
 def eliminating_edge_responses(I, points, r):
   """
@@ -146,7 +110,7 @@ def eliminating_edge_responses(I, points, r):
     #D_hessian = numpy.array([[Dxx, Dxy], \
     #                         [Dxy, Dyy]])
     # trace and determinant of the Hessian matrix
-
+    #print "calclating hessian"
     dD = numpy.matrix([[dx], [dy]])
     H = numpy.matrix([[Dxx, Dxy], [Dxy, Dyy]])
     x_hat = numpy.linalg.lstsq(H, dD)[0]
@@ -156,10 +120,10 @@ def eliminating_edge_responses(I, points, r):
     # (float(tr)**2 / float(det) < float((r+1)**2) / float(r))
     # ((((dxx + dyy) ** 2) * r) < (dxx * dyy - (dxy ** 2)) * (((r + 1) ** 2)))
     if (det != 0):
-      if (float(tr)**2 / float(det) < float((r+1)**2) / float(r)) and (numpy.absolute(x_hat[0]) < 1) and (numpy.absolute(x_hat[1]) < 1) and (numpy.absolute(D_x_hat) > 0.03):
+      if ((((Dxx + Dyy) ** 2) * r) < (Dxx * Dyy - (Dxy ** 2)) * (((r + 1) ** 2))) and (numpy.absolute(x_hat[0]) < 0.5) and (numpy.absolute(x_hat[1]) < 0.5) and (numpy.absolute(D_x_hat) > 0.03):
         result.append(first_points[i])
         tr2det.append(float(tr)**2 / float(det))
-  #print "Result: ", result
+    #print "Result: ", result
   return(result, tr2det)
 
     # if the determinant is 0, the calculation trace^2/det is invalid,
@@ -279,11 +243,11 @@ def SIFT(filename, r_mag):
   for y in range(3, height - 3):
     for x in range(3, length - 3):
       if (find_max(dog1, dog2, dog3, y, x) == 1):
-        I[y][x] = [0,0,255]
+        #I[y][x] = [0,0,255]
         DoG_extrema_points_1_1.append([y,x])
 
       if (find_max(dog2, dog3, dog4, y, x) == 1):
-        I[y][x] = [0,0,255]
+        #I[y][x] = [0,0,255]
         DoG_extrema_points_1_2.append([y,x])
 
   #cv2.imshow('image', I)
@@ -409,6 +373,6 @@ def test_SIFT(filename, r, increment, iterations):
   for i in range(0, iterations):
     SIFT(filename, r + (i * increment))
     print(i)
-test_SIFT('erimitage2.jpg', 2, 2, 15)
+test_SIFT('erimitage2.jpg', 1, 8, 15)
 
 #SIFT('erimitage.jpg', 10)
