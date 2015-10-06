@@ -7,3 +7,10 @@ Look at SURF
 AB:
 Orientation of keypoints
 Orientere sig om RANSAC og PROSAC
+
+
+Idéer:
+Test suite: kunne f.eks. være:
+input: [reference til funktion, sigma/oa., inkrementereingsværdi, antal billeder]
+output: udskriver x antal billeder, med indledende værdi sigma, inkrementeret med inkrementeringsværdien, og udskriver
+x antal billeder med varierende sigmaværdi(eller andre varierende værdier) og passende billedtitel.
