@@ -130,3 +130,4 @@ def test_SIFT(filename, r, iterations, increment):
   for i in range(0, iterations):
     sift.SIFT(filename, r + (i * increment))
 
+
