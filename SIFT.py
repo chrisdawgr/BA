@@ -46,31 +46,31 @@ def find_max(dog1, dog2, dog3, y, x, princip_cur):
       mini = 1
     i += 1
     if (i == 26):
-      Dx = (dog2[1][2] - dog2[1][0]) * 0.5 / 255
-      Dy = (dog2[2][1] - dog2[2][1]) * 0.5 / 255
-      Ds = (dog3[1][1] - dog1[1][1]) * 0.5 / 255
-      Dxx = (dog2[1][2] + dog2[1][0] - 2 * dog2[1][1])# * 1.0 / 255
-      Dyy = (dog2[2][1] + dog2[0][1] - 2 * dog2[1][1])# * 1.0 / 255   
-      Dss = (dog3[1][1] + dog1[1][1] - 2 * dog2[1][1]) * 1.0 / 255
-      Dxy = (dog2[2][2] - dog2[2][0] - dog2[0][2] + dog2[0][0]) * 0.25 / 255
-      Dxs = (dog3[1][2] - dog3[1][0] - dog1[1][2] + dog1[1][0]) * 0.5 / 255 
-      Dys = (dog3[2][1] - dog3[0][1] - dog1[2][1] + dog1[0][1]) * 0.5 / 255  
+      Dx = (dog2[1][2] - dog2[1][0]) * 0.5 #/ 255
+      Dy = (dog2[2][1] - dog2[2][1]) * 0.5 #/ 255
+      Ds = (dog3[1][1] - dog1[1][1]) * 0.5 #/ 255
+      Dxx = (dog2[1][2] + dog2[1][0] - 2 * dog2[1][1]) * 1.0 #/ 255
+      Dyy = (dog2[2][1] + dog2[0][1] - 2 * dog2[1][1]) * 1.0 #/ 255   
+      Dss = (dog3[1][1] + dog1[1][1] - 2 * dog2[1][1]) * 1.0 #/ 255
+      Dxy = (dog2[2][2] - dog2[2][0] - dog2[0][2] + dog2[0][0]) * 0.25 #/ 255
+      Dxs = (dog3[1][2] - dog3[1][0] - dog1[1][2] + dog1[1][0]) * 0.5 #/ 255 
+      Dys = (dog3[2][1] - dog3[0][1] - dog1[2][1] + dog1[0][1]) * 0.5 #/ 255  
       H = numpy.matrix([[Dxx, Dxy, Dxs], [Dxy, Dyy, Dys], [Dxs, Dys, Dss]]) 
       DX = numpy.matrix([[Dx], [Dy], [Ds]])
       det = float(numpy.linalg.det(H))
 
-      if (det > 0.1):
+      if (det > 0):
         tr = float(Dxx) + float(Dyy) + float(Dss)
         r = float(princip_cur)
-        print(tr**2, det)
+        #print(tr**2, det)
         xhat = numpy.linalg.inv(H) * DX
         Dxhat = point + (1/2.0) * DX.transpose() * xhat
-        print(str(tr**2 / det) + ">" + str((r+1)**2 / r) + "\t\t\txhat=" + str(abs(Dxhat)))
+        #print(str(tr**2 / det) + "<" + str((r+1)**2 / r) + "\t\t\txhat=" + str(abs(Dxhat)))
 
         #print("this is point  \n" + str(point) + "\n\n\n")
         #print("this is DX  \n" + str(DX) + "\n\n\n")
         #print("this is xhat  \n" + str(xhat) + "\n\n\n")
-        if ((tr**2 / det < (r + 1)**2 / r) and (abs(Dxhat) > 0)):
+        if ((tr**2 / det < (r + 1)**2 / r) and (abs(Dxhat)) > 0.03):
           return 1
         else:
           return 0
@@ -285,11 +285,12 @@ def SIFT(filename, r_mag):
   for y in range(3, height - 3):
     for x in range(3, length - 3):
       if (find_max(dog1, dog2, dog3, y, x, r_mag) == 1):
-        #I[y][x] = [0,0,255]
+        I[y][x] = [0,0,255]
         DoG_extrema_points_1_1.append([y,x])
 
+
       if (find_max(dog2, dog3, dog4, y, x, r_mag) == 1):
-        #I[y][x] = [0,0,255]
+        I[y][x] = [0,0,255]
         DoG_extrema_points_1_2.append([y,x])
   print("end of find max")
   #cv2.imshow('image', I)
@@ -328,17 +329,10 @@ def SIFT(filename, r_mag):
   # Writing points to file "out.txt"
 
   # cv2.imwrite('erimitage2.jpg',  I)
-  vals = [DoG_extrema_points_1_1, DoG_extrema_points_1_2]
-  print "eliminating edge responses and performing accurate keypoint localization"
-  # eliminating edge responses
-  #[result1, tr2det1] = eliminating_edge_responses(dog2, \
-  #                  [DoG_extrema_points_1_1], r_mag) 
-  #[result2, tr2det2] = eliminating_edge_responses(dog3, \
-  #                  [DoG_extrema_points_1_2], r_mag)
-  #print("end of calculating edge responses")
+  dogn1 =  numpy.array(DoG_extrema_points_1_1)
+  dogn2 =  numpy.array(DoG_extrema_points_1_2)
+  result = numpy.vstack([dogn1, dogn2])
 
-  result = numpy.concatenate((vals[0], vals[1]), axis=0)
-  result = result.transpose()
   h.points_to_txt(result, "interest_points.txt", "\n")
 
   color_pic(I, result, filename[:-4] + "-sift-"+ "r-" + str(r_mag) + ".jpg")
