@@ -12,7 +12,7 @@ import helperfunctions as h
 def getaverage(points):
   return (reduce(lambda x, y: x + y, points) / len(points))
 
-def find_max(dog1, dog2, dog3, y, x):
+def find_max(dog1, dog2, dog3, y, x, princip_cur):
   """
   TODO: Point must be x percent larger than nearest.
   Determines if the given point(y,x) is a maximum or minimum point
@@ -46,10 +46,41 @@ def find_max(dog1, dog2, dog3, y, x):
       mini = 1
     i += 1
     if (i == 26):
-      return 1
+      Dx = (dog2[1][2] - dog2[1][0]) * 0.5 / 255
+      Dy = (dog2[2][1] - dog2[2][1]) * 0.5 / 255
+      Ds = (dog3[1][1] - dog1[1][1]) * 0.5 / 255
+      Dxx = (dog2[1][2] + dog2[1][0] - 2 * dog2[1][1])# * 1.0 / 255
+      Dyy = (dog2[2][1] + dog2[0][1] - 2 * dog2[1][1])# * 1.0 / 255   
+      Dss = (dog3[1][1] + dog1[1][1] - 2 * dog2[1][1]) * 1.0 / 255
+      Dxy = (dog2[2][2] - dog2[2][0] - dog2[0][2] + dog2[0][0]) * 0.25 / 255
+      Dxs = (dog3[1][2] - dog3[1][0] - dog1[1][2] + dog1[1][0]) * 0.5 / 255 
+      Dys = (dog3[2][1] - dog3[0][1] - dog1[2][1] + dog1[0][1]) * 0.5 / 255  
+      H = numpy.matrix([[Dxx, Dxy, Dxs], [Dxy, Dyy, Dys], [Dxs, Dys, Dss]]) 
+      DX = numpy.matrix([[Dx], [Dy], [Ds]])
+      det = float(numpy.linalg.det(H))
+
+      if (det > 0.1):
+        tr = float(Dxx) + float(Dyy) + float(Dss)
+        r = float(princip_cur)
+        print(tr**2, det)
+        xhat = numpy.linalg.inv(H) * DX
+        Dxhat = point + (1/2.0) * DX.transpose() * xhat
+        print(str(tr**2 / det) + ">" + str((r+1)**2 / r) + "\t\t\txhat=" + str(abs(Dxhat)))
+
+        #print("this is point  \n" + str(point) + "\n\n\n")
+        #print("this is DX  \n" + str(DX) + "\n\n\n")
+        #print("this is xhat  \n" + str(xhat) + "\n\n\n")
+        if ((tr**2 / det < (r + 1)**2 / r) and (abs(Dxhat) > 0)):
+          return 1
+        else:
+          return 0
+      else:
+        return 0
   return 0
 
-def eliminating_edge_responses(I, points, r):
+
+
+def eliminating_edge_responses(I, points, principalcur):
   """
   """
   result = []
@@ -70,12 +101,13 @@ def eliminating_edge_responses(I, points, r):
                             [1, -2, 1], \
                             [0, 0,  0]])
 
+    mask_dyy = mask_dxx.transpose()
     #dx = (dog2[y][x+1] - dog2[x][y-1])*0.5 /255
     
-    dx = (D[1][2] - D[1][0]) #*0.5 /255
+    #dx = (D[1][2] - D[1][0]) #*0.5 /255
     #dy = (dog2[y+1][x]- dog2[y-1][x]) * 0.5 / 255
     
-    dy = (D[2][1]- D[0][1])# * 0.5 / 255
+    #dy = (D[2][1]- D[0][1])# * 0.5 / 255
     #ds = (dog3[y][x]- dog1[y][x])*0.5/255 
     #ds = (dog3[1][1]- dog1[1][1])*0.5/255 
     #dxx = (dog2[y][x+1] + dog2[y][x-1] - 2 * dog2[y][x]) * 1.0 / 255
@@ -94,14 +126,13 @@ def eliminating_edge_responses(I, points, r):
     #dys = (dog3[y+1][x] - dog3[y-1][x] - dog1[y+1][x] + dog1[y-1][x]) * 0.25 / 255  
     #dys = (dog3[2][1] - dog3[0][1] - dog1[2][1] + dog1[0][1]) * 0.25 / 255  
 
-    mask_dyy = mask_dxx.transpose()
 
     Dxx = numpy.multiply(D, mask_dxx)
-    Dxx = Dxx.sum()
+    Dxx = float(Dxx.sum())
 
     Dyy = numpy.multiply(D, mask_dyy)
-    Dyy = Dyy.sum()
-    Dxy = D[2][2] - D[0][2] - D[2][0] + D[0][0]
+    Dyy = float(Dyy.sum())
+    Dxy = float(D[2][2] - D[0][2] - D[2][0] + D[0][0])
 
 
     # The Hessian matrix
@@ -111,19 +142,29 @@ def eliminating_edge_responses(I, points, r):
     #                         [Dxy, Dyy]])
     # trace and determinant of the Hessian matrix
     #print "calclating hessian"
-    dD = numpy.matrix([[dx], [dy]])
+    #dD = numpy.matrix([[dx], [dy]])
     H = numpy.matrix([[Dxx, Dxy], [Dxy, Dyy]])
-    x_hat = numpy.linalg.lstsq(H, dD)[0]
-    D_x_hat = D[1][1] + 0.5 * numpy.dot(dD.transpose(), x_hat)
+    #x_hat = numpy.linalg.lstsq(H, dD)[0]
+    #D_x_hat = D[1][1] + 0.5 * numpy.dot(dD.transpose(), x_hat)
     tr = Dxx + Dyy
-    det = numpy.linalg.det(H)
+    det = float(numpy.linalg.det(H))
     # (float(tr)**2 / float(det) < float((r+1)**2) / float(r))
     # ((((dxx + dyy) ** 2) * r) < (dxx * dyy - (dxy ** 2)) * (((r + 1) ** 2)))
-    if (det != 0):
-      if ((((Dxx + Dyy) ** 2) * r) < (Dxx * Dyy - (Dxy ** 2)) * (((r + 1) ** 2))) and (numpy.absolute(x_hat[0]) < 0.5) and (numpy.absolute(x_hat[1]) < 0.5) and (numpy.absolute(D_x_hat) > 0.03):
+    #if ((((Dxx + Dyy) ** 2) * r) < (Dxx * Dyy - (Dxy ** 2)) * (((r + 1) ** 2))) and (numpy.absolute(x_hat[0]) < 0.5) and (numpy.absolute(x_hat[1]) < 0.5) and (numpy.absolute(D_x_hat) > 0.03):
+    a = float(principalcur)
+    #aa = open('test.txt', 'a')
+    if (det > 0):
+      tr2 = float(tr)**2 / float(det)
+      r2 = float(principalcur + 1) ** 2.0 / float(principalcur)
+      #aa.write(str(tr**2/det) + " " + str(a**2/a))
+      #aa.write("\n")
+      if (tr2 < r2):
+        #print(tr**2 / det, a**2 / a)
+        #aa.write(" found")
         result.append(first_points[i])
         tr2det.append(float(tr)**2 / float(det))
     #print "Result: ", result
+  #aa.close()
   return(result, tr2det)
 
     # if the determinant is 0, the calculation trace^2/det is invalid,
@@ -240,15 +281,19 @@ def SIFT(filename, r_mag):
   DoG_extrema_points_3 = []
   DoG_extrema_points_4 = []
    
+  print("Find max")
   for y in range(3, height - 3):
     for x in range(3, length - 3):
-      if (find_max(dog1, dog2, dog3, y, x) == 1):
+      if (find_max(dog1, dog2, dog3, y, x, r_mag) == 1):
         #I[y][x] = [0,0,255]
         DoG_extrema_points_1_1.append([y,x])
 
-      if (find_max(dog2, dog3, dog4, y, x) == 1):
+      if (find_max(dog2, dog3, dog4, y, x, r_mag) == 1):
         #I[y][x] = [0,0,255]
         DoG_extrema_points_1_2.append([y,x])
+  print("end of find max")
+  #cv2.imshow('image', I)
+  #cv2.waitKey(0)
 
   #cv2.imshow('image', I)
   #cv2.waitKey(0)
@@ -286,15 +331,15 @@ def SIFT(filename, r_mag):
   vals = [DoG_extrema_points_1_1, DoG_extrema_points_1_2]
   print "eliminating edge responses and performing accurate keypoint localization"
   # eliminating edge responses
-  [result1, tr2det1] = eliminating_edge_responses(dog2, \
-                    [DoG_extrema_points_1_1], r_mag) 
-  [result2, tr2det2] = eliminating_edge_responses(dog3, \
-                    [DoG_extrema_points_1_2], r_mag)
+  #[result1, tr2det1] = eliminating_edge_responses(dog2, \
+  #                  [DoG_extrema_points_1_1], r_mag) 
+  #[result2, tr2det2] = eliminating_edge_responses(dog3, \
+  #                  [DoG_extrema_points_1_2], r_mag)
+  #print("end of calculating edge responses")
 
-  result = numpy.concatenate((result1, result2), axis=0)
-  tr2det = numpy.concatenate((tr2det1, tr2det2), axis=0)
-  totxt = numpy.vstack([result.transpose(),tr2det]).transpose()
-  h.points_to_txt(totxt, "interest_points.txt", "\n")
+  result = numpy.concatenate((vals[0], vals[1]), axis=0)
+  result = result.transpose()
+  h.points_to_txt(result, "interest_points.txt", "\n")
 
   color_pic(I, result, filename[:-4] + "-sift-"+ "r-" + str(r_mag) + ".jpg")
 
@@ -371,8 +416,10 @@ def accurate_keypoint_localization(I, vals, window_size):
   #print(final_mat)
 def test_SIFT(filename, r, increment, iterations):
   for i in range(0, iterations):
+    print(filename, r + (i * increment))
     SIFT(filename, r + (i * increment))
-    print(i)
-test_SIFT('erimitage2.jpg', 1, 8, 15)
+
+
+test_SIFT('erimitage2.jpg', 10, 1, 4)
 
 #SIFT('erimitage.jpg', 10)
