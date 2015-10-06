@@ -18,23 +18,16 @@ def find_max(dog1, dog2, dog3, y, x, princip_cur):
   Determines if the given point(y,x) is a maximum or minimum point
   among it's 26 neighbours, in the scale above and below it.
   """
-  #point = dog2[y][x]
 
   dog1 = h.create_window(dog1, [y, x], 3)
   dog2 = h.create_window(dog2, [y, x], 3)
   dog3 = h.create_window(dog3, [y, x], 3)
   point = dog2[1][1]
 
-  # Shouldnt this come after create window ??
-
   # Create array of neighbouring points 
   dog_points = numpy.array([dog1, dog2, dog3])
   dog_points = dog_points.reshape(-1)            # make 1-dimensional
   dog_points = numpy.delete(dog_points, 13)      # CT: Delete point [1][1]
-  #scndMin = min(dog_points)
-  #scndMax = max(dog_points)
-  #scndAvg = getaverage(dog_points)
-  #average = getaverage(dog_points)
 
   i = 0
   maxi = 0
@@ -79,103 +72,6 @@ def find_max(dog1, dog2, dog3, y, x, princip_cur):
   return 0
 
 
-
-def eliminating_edge_responses(I, points, principalcur):
-  """
-  """
-  result = []
-  tr2det = []
-  first_points = [] # List of interest points
-  
-  # appends ALL extremum points for a given scale, to first_points
-  for i in range(0, len(points)):
-    for j in points[i]:
-      first_points.append(map(int, j))
- 
-  # For each interest point in picture perform edge-elimination:
-  for i in range(0, len(first_points)):
-    D = h.create_window(I, first_points[i], 3)
-
-    # calculation of the derivaties of D in x, y, xx, yy, yx direction
-    mask_dxx = numpy.array([[0, 0,  0], \
-                            [1, -2, 1], \
-                            [0, 0,  0]])
-
-    mask_dyy = mask_dxx.transpose()
-    #dx = (dog2[y][x+1] - dog2[x][y-1])*0.5 /255
-    
-    #dx = (D[1][2] - D[1][0]) #*0.5 /255
-    #dy = (dog2[y+1][x]- dog2[y-1][x]) * 0.5 / 255
-    
-    #dy = (D[2][1]- D[0][1])# * 0.5 / 255
-    #ds = (dog3[y][x]- dog1[y][x])*0.5/255 
-    #ds = (dog3[1][1]- dog1[1][1])*0.5/255 
-    #dxx = (dog2[y][x+1] + dog2[y][x-1] - 2 * dog2[y][x]) * 1.0 / 255
-    
-    #dxx = (D[1][2] + D[1][0] - 2 * D[1][1])# * 1.0 / 255
-    #dyy = (dog2[y+1][x] + dog2[y-1][x] - 2 * dog2[y][x]) * 1.0 / 255   
-    
-    #dyy = (D[2][1] + D[0][1] - 2 * D[1][1])# * 1.0 / 255   
-    #dss = (dog3[y][x] + dog1[y][x] - 2 *dog2[y][x]) * 1.0 / 255
-    #dss = (dog3[1][1] + dog1[1][1] - 2 *dog2[1][1]) * 1.0 / 255
-    #dxy = (dog2[y+1][x+1] - dog2[y+1][x-1] - dog2[y-1][x+1] + dog2[y-1][x-1]) * 0.25 / 255 
-    
-    #dxy = (D[2][2] - D[2][0] - D[0][2] + D[0][0])# * 0.25 / 255 
-    #dxs = (dog3[y][x+1] - dog3[y][x-1] - dog1[y][x+1] + dog1[y][x-1]) * 0.25 / 255
-    #dxs = (dog3[1][2] - dog3[1][0] - dog1[1][2] + dog1[1][0]) * 0.25 / 255
-    #dys = (dog3[y+1][x] - dog3[y-1][x] - dog1[y+1][x] + dog1[y-1][x]) * 0.25 / 255  
-    #dys = (dog3[2][1] - dog3[0][1] - dog1[2][1] + dog1[0][1]) * 0.25 / 255  
-
-
-    Dxx = numpy.multiply(D, mask_dxx)
-    Dxx = float(Dxx.sum())
-
-    Dyy = numpy.multiply(D, mask_dyy)
-    Dyy = float(Dyy.sum())
-    Dxy = float(D[2][2] - D[0][2] - D[2][0] + D[0][0])
-
-
-    # The Hessian matrix
-    # NOTE: when Dxy and Dyx are calculated individually, the
-    # result on erimitage.jpg is MUCH better
-    #D_hessian = numpy.array([[Dxx, Dxy], \
-    #                         [Dxy, Dyy]])
-    # trace and determinant of the Hessian matrix
-    #print "calclating hessian"
-    #dD = numpy.matrix([[dx], [dy]])
-    H = numpy.matrix([[Dxx, Dxy], [Dxy, Dyy]])
-    #x_hat = numpy.linalg.lstsq(H, dD)[0]
-    #D_x_hat = D[1][1] + 0.5 * numpy.dot(dD.transpose(), x_hat)
-    tr = Dxx + Dyy
-    det = float(numpy.linalg.det(H))
-    # (float(tr)**2 / float(det) < float((r+1)**2) / float(r))
-    # ((((dxx + dyy) ** 2) * r) < (dxx * dyy - (dxy ** 2)) * (((r + 1) ** 2)))
-    #if ((((Dxx + Dyy) ** 2) * r) < (Dxx * Dyy - (Dxy ** 2)) * (((r + 1) ** 2))) and (numpy.absolute(x_hat[0]) < 0.5) and (numpy.absolute(x_hat[1]) < 0.5) and (numpy.absolute(D_x_hat) > 0.03):
-    a = float(principalcur)
-    #aa = open('test.txt', 'a')
-    if (det > 0):
-      tr2 = float(tr)**2 / float(det)
-      r2 = float(principalcur + 1) ** 2.0 / float(principalcur)
-      #aa.write(str(tr**2/det) + " " + str(a**2/a))
-      #aa.write("\n")
-      if (tr2 < r2):
-        #print(tr**2 / det, a**2 / a)
-        #aa.write(" found")
-        result.append(first_points[i])
-        tr2det.append(float(tr)**2 / float(det))
-    #print "Result: ", result
-  #aa.close()
-  return(result, tr2det)
-
-    # if the determinant is 0, the calculation trace^2/det is invalid,
-    # thus an initial check is needed. 
-    # The second if, is the check tr^2/det < (r+1)^2/r.
-    # in SIFT, the r value is 10
-    #if (det > 0):
-      #if (float(tr)**2 / float(det) < float((r+1)**2) / float(r)):
-        #result.append(first_points[i])
-        #tr2det.append(float(tr)**2 / float(det))
-  #return(result, tr2det)
 
 def half_image(I):
   """
@@ -354,66 +250,12 @@ def color_pic(*arg):
 
 #currently assuming, a window size of 3x3
 #NOT working properly, and NOT used in SIFT function
-def accurate_keypoint_localization(I, vals, window_size):
-  final_mat = []
-  vals = csv.reader(open('out2.npy', 'r'), delimiter=' ')
-  valz = [row for row in vals]
-  vals = valz
-  first_vals = []
-  height = len(I)
-  length = len(I[0])   # CT: len(I[0]) ?
-
-  for i in range(0, len(vals)):
-    first_vals.append(map(int, vals[i]))
-
-  holder = []
-  for i in range(0, len(first_vals)):
-    if (first_vals[i][0] > height - 3 or first_vals[i][0] < 3 or \
-        first_vals[i][1] > length - 3 or first_vals[i][1] < 3):
-      holder.append([first_vals[i][0], first_vals[i][1]])
-  first_vals = holder
-
-  first_vals = numpy.array(first_vals)
-
-  for i in range(0, len(first_vals)):
-
-    y_coor = first_vals[i][0] 
-    x_coor = first_vals[i][1]
-    D = numpy.zeros([window_size, window_size])
-    half_window_size = int(window_size/2)
-
-
-    D_hessian = numpy.array([[Dxx, Dyx], \
-                             [Dyx, Dyy]])
-
-
-    if (numpy.linalg.det(D_hessian) != 0):
-      xhat = - numpy.dot(numpy.linalg.inv(D_hessian),
-                numpy.array([[Dx],[Dy]]))
-      holder1 = [round(xhat[0]), round(xhat[1])]
-
-      #Check if coordinates are right - might be reversed (x,y)/(y,x)
-
-      D_xhat = D_p0_p0 + (1/2) * numpy.dot(numpy.array([Dy, Dx]), xhat)
-      #print(D_xhat)
-
-      if(D_xhat > 10.0):
-        final_mat.append(holder1)
-
-
-      """
-      for i in range (0, len(vals)):
-        if (abs(D_xhat) > 0.03):
-          a.remove(i)
-          
-      """
-  #print(final_mat)
 def test_SIFT(filename, r, increment, iterations):
   for i in range(0, iterations):
     print(filename, r + (i * increment))
     SIFT(filename, r + (i * increment))
 
 
-test_SIFT('erimitage2.jpg', 10, 1, 4)
+test_SIFT('erimitage2.jpg', 0.1, 0.1, 10)
 
 #SIFT('erimitage.jpg', 10)
