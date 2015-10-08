@@ -108,7 +108,7 @@ def harris(Iname, k, thresh,flag):
     h.points_to_txt(hoShiThomasExtremaPoints, "hoShiThomasExtremaPoints.txt", "\n")
     print "Found",len(hoShiThomasExtremaPoints), "interest points. threshold:",thresh
   if flag == 3:
-    h.points_to_txt(hoShiThomasExtremaPoints, "nobleExtremaPoints.txt", "\n")
+    h.points_to_txt(nobleExtremaPoints, "nobleExtremaPoints.txt", "\n")
     print "Found",len(nobleExtremaPoints), "interest points. threshold:",thresh
   cv2.imwrite(method+str(thresh)+'.jpg', I)
 
