@@ -8,6 +8,10 @@ from scipy import misc
 from scipy import linalg as LA
 import helperfunctions as h
 
+# 3 6400 = 1372
+# 1 200000000 =  1393 
+# 2 8400 = 1372
+
 def harris(Iname, k, thresh,flag):
   """
   Input : An image, value k and threshold
@@ -16,10 +20,13 @@ def harris(Iname, k, thresh,flag):
   """
   if flag == 1:
     method = "Harris"
-    print "Using Harris method with a threshold of:", thresh, "recommended threshold is 200000000"
+    print "Using Harris method with a threshold of:", thresh, "recommended: 200000000"
   if flag == 2:
     method = "HoShiThomas"
-    print "Using HoShiThomas method with a threshold of:", thresh, "recommended threshold is 9000"
+    print "Using HoShiThomas method with a threshold of:", thresh, "recommended: 8400"
+  if flag == 3:
+    method = "Noble"
+    print "Using noble method with a threshold of:", thresh, "recommended: 6400"
   # Create empty image holders:
   I = cv2.imread(Iname)
   I_bw = cv2.imread(Iname, 0)
@@ -53,6 +60,7 @@ def harris(Iname, k, thresh,flag):
   Iyy = scipy.ndimage.filters.gaussian_filter(Iyy,sigma = 0.7)
   harrisExtremaPoints = []
   hoShiThomasExtremaPoints = []
+  nobleExtremaPoints = []
   
   # Calculate R = Det -k * TR^2:
   for y in range(0, len(I_bw) ):
@@ -69,6 +77,13 @@ def harris(Iname, k, thresh,flag):
         e_vals, e_vecs = LA.eig(M)
         e_vals = e_vals.real
         C[y][x] = min(e_vals)
+      # Noble method:
+      if flag == 3:
+        epsilon = 0.2
+        M = numpy.array([[a, c],[c, b]])
+        det = (a*b)-(c*c)
+        trace = a + b
+        C[y][x] = det/(trace+epsilon)      
   
   # Threshold values to perform edge hysteresis:
   for y in range(3, len(C)):
@@ -81,10 +96,25 @@ def harris(Iname, k, thresh,flag):
         if (C[y][x] > thresh):
           hoShiThomasExtremaPoints.append([y,x])
           I[y][x] = [0,0,255]
+      if flag == 3:
+        if (C[y][x] > thresh):
+          nobleExtremaPoints.append([y,x])
+          I[y][x] = [0,0,255]
+
   if flag == 1:
     h.points_to_txt(harrisExtremaPoints, ("harrisExtremaPoints.txt"), "\n")
+    print "Found",len(harrisExtremaPoints), "interest points. threshold:",thresh
   if flag == 2:
-    h.points_to_txt(hoShiThomasExtremaPoints, "hoShiThomasExtremaPoints.txt", "\n")  
+    h.points_to_txt(hoShiThomasExtremaPoints, "hoShiThomasExtremaPoints.txt", "\n")
+    print "Found",len(hoShiThomasExtremaPoints), "interest points. threshold:",thresh
+  if flag == 3:
+    h.points_to_txt(hoShiThomasExtremaPoints, "nobleExtremaPoints.txt", "\n")
+    print "Found",len(nobleExtremaPoints), "interest points. threshold:",thresh
   cv2.imwrite(method+str(thresh)+'.jpg', I)
 
-harris('erimitage.jpg', 0.04, 200000000 ,1)
+def test_corner_methods(filename,thresh1,thresh2,thresh3):
+  harris(filename,0.04,thresh1,1)
+  harris(filename,0,thresh2,2)
+  harris(filename,0,thresh3,3)
+
+test_corner_methods('erimitage.jpg', 200000000, 8400, 6400)
