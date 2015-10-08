@@ -81,15 +81,9 @@ def txt_to_points(filename):
   points_str = oo.read()
   oo.close()
   points_str = points_str.split()
-
   for i in range(0, len(points_str), 2):
     result.append([int(points_str[i]), int(points_str[i + 1])])
-
   return result
-
-
-
-
 
 def matrix_substraction(m1, m2):
   dim = m1.shape
@@ -104,7 +98,17 @@ def matrix_substraction(m1, m2):
         mat[y][x] = m1[y][x] - m2[y][x]
   return(mat)
 
-      
+def color_pic(*arg):
+  I = arg[0]
+  points = arg[1]
+
+  if (len(arg) >= 2):
+    for p in points:
+      I[p[0]][p[1]] = [0,0,255]
+
+  if (len(arg) == 3):
+    name = arg[2]
+    cv2.imwrite(name, I)      
 
 
 """
@@ -125,9 +129,9 @@ print(D)
 print("end of D \n\n")
 """
 
-
-def test_SIFT(filename, r, iterations, increment):
+"""
+def test_SIFT(filename, r, increment, iterations):
   for i in range(0, iterations):
-    sift.SIFT(filename, r + (i * increment))
-
-
+    print(filename, r + (i * increment))
+    S.SIFT(filename, r + (i * increment))
+"""
