@@ -185,9 +185,9 @@ def SIFT(filename, r_mag):
   for y in range(3, height - 3):
     for x in range(3, length - 3):
       if (find_max(dog1, dog2, dog3, y, x, r_mag) == 1):
-        DoG_extrema_points_1_1.append([y,x])
+        DoG_extrema_points_1_1.append([y,x,0])
       if (find_max(dog2, dog3, dog4, y, x, r_mag) == 1):
-        DoG_extrema_points_1_2.append([y,x])
+        DoG_extrema_points_1_2.append([y,x,1])
   """
   print "Finding points for scale 2"
   for y in range(3, height1 - 3):
@@ -217,11 +217,12 @@ def SIFT(filename, r_mag):
   dogn1 =  numpy.array(DoG_extrema_points_1_1)
   dogn2 =  numpy.array(DoG_extrema_points_1_2)
   #print(result)
-  if (len(dogn1) > 1):
+  if (len(dogn1) > 1 and len(dogn2)):
     result = numpy.vstack([dogn1, dogn2]) # set removes dublicates.
-    print("ishere")
-    print(result)
+    #print("ishere")
+    #print(result)
     h.points_to_txt(result, "interest_points.txt", "\n")
+    h.points_to_txt_3_points(result, "interest_points_with_sigma.txt", "\n")
     h.color_pic(I, result, filename[:-4] + "-sift-"+ "r-" + str(r_mag) + ".jpg")
   
   # scale 2:
@@ -250,4 +251,5 @@ def test_SIFT(filename, r, increment, iterations):
     print(filename, r + (i * increment))
     SIFT(filename, r + (i * increment))
 
-test_SIFT('erimitage2.jpg', 10, 1, 10)
+test_SIFT('erimitage2.jpg', 12, 1, 1)
+
