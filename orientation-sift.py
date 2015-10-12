@@ -81,8 +81,8 @@ def sift_orientation(I, points, window_size):
       hold_mag = numpy.multiply(hold_mag, gauss_window)
       hold_mag = numpy.reshape(hold_mag, -1)
       hold_ori = numpy.reshape(hold_ori, -1)
+
       for j in range(0, len(hold_ori)):
-        #print(hold_ori[j])
         bins[i][0][hold_ori[j]] += hold_mag[j]
 
       hold_mag = h.create_window(I[0], [35,35], window_size)
@@ -99,26 +99,20 @@ def sift_orientation(I, points, window_size):
       holder_bin = []
       holder_bin.append(max_index[0])
       max_val = bin_i[max_index]
-      numpy.delete(bin_i, max_index)
 
       for j in range(0, 35):
-        if (bin_i[j] >= max_val * 0.8):
-          numpy.append(holder_bin, j)
+        if (bin_i[j] >= max_val * 0.8 and j != max_index[0]):
+          holder_bin.append(j)
       orien_of_bin.append(holder_bin)
     i += 1
-  #print(orien_of_bin)
+
 
   o = open('orients.txt', 'w')
   for i in orien_of_bin:
     o.write(str(i) + "\n")
   o.close()
-  print(orien_of_bin)
-
-
-
-  h.points_to_txt2(bins, "bins_for_orientation.txt", "\n\n")
+  #print(orien_of_bin)
   #print(len(bins))
-
 
 
 
