@@ -33,9 +33,9 @@ def find_max(dog1, dog2, dog3, y, x, princip_cur):
       if(accu_and_edge(dog11, dog22, dog33, princip_cur) == 1):
         return 1
       return 0
-    if dog_points[i] >= point:
+    if dog_points[i] > point:
       maxi = 1
-    if dog_points[i] <= point:
+    if dog_points[i] < point:
       mini = 1
     i += 1
   return 0
@@ -45,7 +45,7 @@ def accu_and_edge(dog1, dog2, dog3, princip_cur):
   point = dog2[1][1]
   # Create array of neighbouring points 
   Dxx = (dog2[1][2] + dog2[1][0] - 2 * dog2[1][1]) * 1.0 / 255
-  Dyy = (dog2[2][1] + dog2[0][1] - 2 * dog2[1][1]) * 1.0 / 255   
+  Dyy = (dog2[2][1] + dog2[0][1] - 2 * dog2[1][1]) * 1.0 / 255
   Dss = (dog3[1][1] + dog1[1][1] - 2 * dog2[1][1]) * 1.0 / 255
   Dxy = (dog2[2][2] - dog2[2][0] - dog2[0][2] + dog2[0][0]) * 0.25 / 255
   Dxs = (dog3[1][2] - dog3[1][0] - dog1[1][2] + dog1[1][0]) * 0.5 / 255 
@@ -62,7 +62,7 @@ def accu_and_edge(dog1, dog2, dog3, princip_cur):
   H2 = numpy.matrix([[DXX1, DXY1, DXS1], [DXY1, DYY1, DYS1], [DXS1, DYS1, DSS1]]) 
   det2 = float(numpy.linalg.det(H2))
 
-  if (det2 > 0):
+  if (det > 0):
     Dx = (dog2[1][2] - dog2[1][0]) * 0.5 / 255
     Dy = (dog2[2][1] - dog2[2][1]) * 0.5 / 255
     Ds = (dog3[1][1] - dog1[1][1]) * 0.5 / 255
@@ -72,7 +72,7 @@ def accu_and_edge(dog1, dog2, dog3, princip_cur):
     xhat = numpy.linalg.inv(H) * DX
     #print(mag_xhat)
     #print(x,y,sigma)
-    print(xhat)
+    #print(xhat)
 
     if (abs(xhat[0]) < 0.5 and abs(xhat[1]) < 0.5 and abs(xhat[2]) < 0.5):
       Dxhat = point + (1/2.0) * DX.transpose() * xhat
@@ -80,7 +80,7 @@ def accu_and_edge(dog1, dog2, dog3, princip_cur):
       #print(Dxhat)
       #print(tr**2/det2)
       #print("\n\n")
-      if((abs(Dxhat) > 0.03) and (tr**2/det2 < (r + 1)**2 / r)):
+      if((abs(Dxhat) > 1.03) and (tr**2/det2 < (r + 1)**2 / r)):
         return 1
   return 0
 
@@ -216,8 +216,8 @@ def SIFT(filename, r_mag):
   # Scale 1:
   dogn1 =  numpy.array(DoG_extrema_points_1_1)
   dogn2 =  numpy.array(DoG_extrema_points_1_2)
-  print(result)
-  if (len(result) > 1):
+  #print(result)
+  if (len(dogn1) > 1):
     result = numpy.vstack([dogn1, dogn2]) # set removes dublicates.
     print("ishere")
     print(result)
