@@ -30,27 +30,20 @@ def find_max(dog1, dog2, dog3, y, x, princip_cur):
   mini = 0
   while(maxi == 0 or mini == 0):
     if (i == 26):
-      if(accu_and_edge(dog1, dog2, dog3, y, x, 0, princip_cur) == 1):
+      if(accu_and_edge(dog11, dog22, dog33, y, x, 0, princip_cur) == 1):
         return 1
       return 0
-    if dog_points[i] > point:
+    if dog_points[i] >= point:
       maxi = 1
-    if dog_points[i] < point:
+    if dog_points[i] <= point:
       mini = 1
     i += 1
   return 0
 
 
-def accu_and_edge(dog11, dog22, dog33, y, x, sigma, princip_cur):
-  dog1 = h.create_window(dog11, [y, x], 3)
-  dog2 = h.create_window(dog22, [y, x], 3)
-  dog3 = h.create_window(dog33, [y, x], 3)
+def accu_and_edge(dog1, dog2, dog3, y, x, sigma, princip_cur):
   point = dog2[1][1]
-  magnitude =  math.sqrt((dog2[1][0] - dog2[1][2])**2 + (dog2[0][1] - dog2[2][1])**2)
   # Create array of neighbouring points 
-  dog_points = numpy.array([dog1, dog2, dog3])
-  dog_points = dog_points.reshape(-1)            # make 1-dimensional
-  dog_points = numpy.delete(dog_points, 13)      # CT: Delete point [1][1]
   Dxx = (dog2[1][2] + dog2[1][0] - 2 * dog2[1][1]) * 1.0 / 255
   Dyy = (dog2[2][1] + dog2[0][1] - 2 * dog2[1][1]) * 1.0 / 255   
   Dss = (dog3[1][1] + dog1[1][1] - 2 * dog2[1][1]) * 1.0 / 255
@@ -60,12 +53,24 @@ def accu_and_edge(dog11, dog22, dog33, y, x, sigma, princip_cur):
   H = numpy.matrix([[Dxx, Dxy, Dxs], [Dxy, Dyy, Dys], [Dxs, Dys, Dss]]) 
   det = float(numpy.linalg.det(H))
 
+
+  DXX = (dog2[1][2] + dog2[1][0] - 2 * dog2[1][1]) * 1.0 
+  DYY = (dog2[2][1] + dog2[0][1] - 2 * dog2[1][1]) * 1.0
+  DSS = (dog3[1][1] + dog1[1][1] - 2 * dog2[1][1]) * 1.0
+  DXY = (dog2[2][2] - dog2[2][0] - dog2[0][2] + dog2[0][0]) * 0.25 
+  DXS = (dog3[1][2] - dog3[1][0] - dog1[1][2] + dog1[1][0]) * 0.5 
+  DYS = (dog3[2][1] - dog3[0][1] - dog1[2][1] + dog1[0][1]) * 0.5
+  H2 = numpy.matrix([[DXX, DXY, DXS], [DXY, DYY, DYS], [DXS, DYS, DSS]]) 
+  det2 = float(numpy.linalg.det(H2))
+
+
+
   if (det > 0):
     Dx = (dog2[1][2] - dog2[1][0]) * 0.5 / 255
     Dy = (dog2[2][1] - dog2[2][1]) * 0.5 / 255
     Ds = (dog3[1][1] - dog1[1][1]) * 0.5 / 255
     DX = numpy.matrix([[Dx], [Dy], [Ds]])
-    tr = float(Dxx) + float(Dyy) + float(Dss)
+    tr = float(DXX) + float(DYY) + float(DSS)
     r = float(princip_cur)
     xhat = numpy.linalg.inv(H) * DX
     #print(mag_xhat)
@@ -73,19 +78,12 @@ def accu_and_edge(dog11, dog22, dog33, y, x, sigma, princip_cur):
 
     if (xhat[0] < 0.5 or xhat[1] < 0.5 or xhat[2] < 0.5):
       Dxhat = point + (1/2.0) * DX.transpose() * xhat
-      if((abs(Dxhat) > 0.03) and (tr**2/det < (r + 1)**2 / r)):
-        print("dog1")
-        print(dog1)
-        print("dog2")
-        print(dog2)
-        print("dog3")
-        print(dog3)
-        print("\n")
-        print(xhat)
-        print("\n")
-        print(Dxhat)
-        print("\n\n")
+      if((abs(Dxhat) > 0.03) and (tr**2/det2 < (r + 1)**2 / r)):
         return 1
+      print(tr**2/det2)
+      #print(Dxhat)
+      #print(xhat)
+      #print("rejected because dxhat or  xhat")
       return 0
 
 
@@ -221,8 +219,12 @@ def SIFT(filename, r_mag):
   dogn1 =  numpy.array(DoG_extrema_points_1_1)
   dogn2 =  numpy.array(DoG_extrema_points_1_2)
   result = numpy.vstack([dogn1, dogn2]) # set removes dublicates.
-  h.points_to_txt(result, "interest_points.txt", "\n")
-  h.color_pic(I, result, filename[:-4] + "-sift-"+ "r-" + str(r_mag) + ".jpg")
+  print(result)
+  if (len(result) > 3):
+    print("ishere")
+    print(result)
+    h.points_to_txt(result, "interest_points.txt", "\n")
+    h.color_pic(I, result, filename[:-4] + "-sift-"+ "r-" + str(r_mag) + ".jpg")
   
   # scale 2:
   #dogn3 =  numpy.array(DoG_extrema_points_2_1)
@@ -250,4 +252,4 @@ def test_SIFT(filename, r, increment, iterations):
     print(filename, r + (i * increment))
     SIFT(filename, r + (i * increment))
 
-test_SIFT('erimitage2.jpg', 0.1, 0.1, 10)
+test_SIFT('erimitage2.jpg', 10, 1, 10)
