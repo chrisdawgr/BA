@@ -35,10 +35,6 @@ def orientation22(I, x, y):
   return(aatan2)
 """
 
-
-
-
-
 def sift_orientation(I, points, window_size):
   """
   Input : image I, interest points, size of window
@@ -54,7 +50,6 @@ def sift_orientation(I, points, window_size):
   gauss_window = h.gauss(window_size + 2, 1.5)
   hold = numpy.zeros([1,36])
 
-
   # length of outer list
   o = 0
   for p in points:
@@ -65,8 +60,8 @@ def sift_orientation(I, points, window_size):
 
   # size of all usable points o
   bins = numpy.zeros([o,  1, 36])
-  
 
+  i = 0
   for p in points:
     # if a point is too close to the border of the image, it is discarded
     if ((p[0] < max_point_size_y and p[0] > min_point_size_y) and \
@@ -90,19 +85,25 @@ def sift_orientation(I, points, window_size):
         
         # finds points within 80% of interest point
         #TODO
-        """
-        orien = [max_index]
-        for i in range(0, 36)
-          if (bin_i[i] >= maxbin * 0.8):
-            orien.append(bin_i[i])
+
+        orien_of_bin = numpy.array(max_index)
+        max_val = bin_i[max_index]
+        numpy.delete(bin_i, max_index)
+
+        for i in range(0, 35):
+          if (bin_i[i] >= max_val * 0.8):
+            numpy.append(orien_of_bin, i)
+        print(orien_of_bin)
+
+        i += 1
 
             #hold[0][math.floor(orientation_p /10.0)] += 1
 
             #print(str([y, x]) + " " + "magnitude: " + str(magnitude_p) \
             #    + " " + "orientation: " + str(orientation_p))
 
-        """
   h.points_to_txt2(bins, "bins_for_orientation.txt", "\n\n")
+  print(len(bins))
 
 I = cv2.imread('erimitage2.jpg', 0)
 
@@ -118,4 +119,4 @@ print(orientation22(I, 0, -1))
 print(orientation22(I, 1, -1))
 """
 points = h.txt_to_points('interest_points.txt')
-sift_orientation(I, points, 19)
+sift_orientation(I, points, 10)
