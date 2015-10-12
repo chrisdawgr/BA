@@ -1,4 +1,7 @@
 import helperfunctions as h
+import scipy
+import scipy.ndimage
+from scipy import misc
 import cv2
 import math
 import numpy
@@ -24,16 +27,9 @@ def orientation(I, point):
   Lx = w[1][0] - w[1][2]
   theta = 0.5 * math.pi - math.atan2(Lx, Ly)
   theta = math.degrees(theta % (2 * math.pi))
+  #print(theta)
   return(theta)
  
-"""
-def orientation22(I, x, y):
-  Input : Image I, point point
-  Output: orientation of image
-  aatan2 = 0.5 * math.pi - math.atan2(x, y)
-  aatan2 = math.degrees(aatan2 % (2 * math.pi))
-  return(aatan2)
-"""
 
 def sift_orientation(I, points, window_size):
   """
@@ -43,70 +39,90 @@ def sift_orientation(I, points, window_size):
 
   # point with orientation; [[y, x],[o1, o2, o3]]
   pwo = []
-  max_point_size_y = len(I) - (window_size + 2)
+  max_point_size_y = len(I[0]) - (window_size + 2)
   min_point_size_y = window_size
-  max_point_size_x = len(I[0]) - (window_size + 5)
+  max_point_size_x = len(I[0][0]) - (window_size + 5)
   min_point_size_x = window_size 
-  gauss_window = h.gauss(window_size + 2, 1.5)
-  hold = numpy.zeros([1,36])
+  gauss_window = h.gauss(window_size, 1.5)
+  hold_mag = h.create_window(I[0], [35,35], window_size)
+  hold_ori = h.create_window(I[0], [35,35], window_size)
+  final_points = []
+  orien_of_bin = []
+  
 
   # length of outer list
   o = 0
   for p in points:
     if ((p[0] < max_point_size_y and min_point_size_y < p[0]) and \
         (p[1] < max_point_size_x and min_point_size_x < p[1])):
-        #(pp[1] < max_point_size_x and min_point_size_x < pp[1])):
+      final_points.append(p)
       o += 1
 
   # size of all usable points o
   bins = numpy.zeros([o,  1, 36])
 
   i = 0
-  for p in points:
+  for p in final_points:
     # if a point is too close to the border of the image, it is discarded
     if ((p[0] < max_point_size_y and p[0] > min_point_size_y) and \
         (p[1] < max_point_size_x and p[1] > min_point_size_x)):
 
-        ip_window = h.create_window(I, p, window_size + 2) 
-        ip_window = numpy.multiply(ip_window, gauss_window)
+      ip_window = h.create_window(I[p[2]], p, window_size + 2) 
 
-        # creates bin for each point
-        for y in range(0, window_size):
-          for x in range(0, window_size):
+      # creates bin for each point
+      for y in range(0, window_size):
+        for x in range(0, window_size):
+          magnitude_p = magnitude(ip_window, [y + 1, x + 1])
+          orientation_p = orientation(ip_window, [y + 1, x + 1])
+          orientation_p = math.floor(orientation_p/10.0)
+          hold_mag[y][x] = magnitude_p
+          hold_ori[y][x] = orientation_p
 
-            magnitude_p = magnitude(ip_window, [y + 1, x + 1])
-            orientation_p = orientation(ip_window, [y + 1, x + 1])
-            bins[i][0][math.floor(orientation_p /10.0)] += magnitude_p
-        bin_i = bins[i][0]
+      hold_mag = numpy.multiply(hold_mag, gauss_window)
+      hold_mag = numpy.reshape(hold_mag, -1)
+      hold_ori = numpy.reshape(hold_ori, -1)
+      for j in range(0, len(hold_ori)):
+        #print(hold_ori[j])
+        bins[i][0][hold_ori[j]] += hold_mag[j]
+
+      hold_mag = h.create_window(I[0], [35,35], window_size)
+      hold_ori = h.create_window(I[0], [35,35], window_size)
+
+      bin_i = bins[i][0]
         
-        # index of max element in bin
-        max_index = max(bin_i)
-        max_index = [i for i, j in enumerate(bin_i) if j == max_index]
+      # index of max element in bin
+      max_index = max(bin_i)
+      max_index = [k for k, j in enumerate(bin_i) if j == max_index]
         
-        # finds points within 80% of interest point
-        #TODO
+      # finds points within 80% of interest point
 
-        orien_of_bin = numpy.array(max_index)
-        max_val = bin_i[max_index]
-        numpy.delete(bin_i, max_index)
+      holder_bin = []
+      holder_bin.append(max_index[0])
+      max_val = bin_i[max_index]
+      numpy.delete(bin_i, max_index)
 
-        for i in range(0, 35):
-          if (bin_i[i] >= max_val * 0.8):
-            numpy.append(orien_of_bin, i)
-        print(orien_of_bin)
+      for j in range(0, 35):
+        if (bin_i[j] >= max_val * 0.8):
+          numpy.append(holder_bin, j)
+      orien_of_bin.append(holder_bin)
+    i += 1
+  #print(orien_of_bin)
 
-        i += 1
+  o = open('orients.txt', 'w')
+  for i in orien_of_bin:
+    o.write(str(i) + "\n")
+  o.close()
+  print(orien_of_bin)
 
-            #hold[0][math.floor(orientation_p /10.0)] += 1
 
-            #print(str([y, x]) + " " + "magnitude: " + str(magnitude_p) \
-            #    + " " + "orientation: " + str(orientation_p))
 
   h.points_to_txt2(bins, "bins_for_orientation.txt", "\n\n")
-  print(len(bins))
+  #print(len(bins))
 
-I = cv2.imread('erimitage2.jpg', 0)
 
+
+
+I_bw = cv2.imread('erimitage2.jpg', 0)
 
 """
 print(orientation22(I, 1, 0))
@@ -118,5 +134,24 @@ print(orientation22(I, -1, -1))
 print(orientation22(I, 0, -1))
 print(orientation22(I, 1, -1))
 """
-points = h.txt_to_points('interest_points.txt')
-sift_orientation(I, points, 10)
+points = h.txt_to_3_points('interest_points_with_sigma.txt')
+#print(points)
+
+k = 2**(1.0/2)
+sigma1 = [math.sqrt(0.5), math.sqrt(1), math.sqrt(2), math.sqrt(4),
+         math.sqrt(8), math.sqrt(16), math.sqrt(32), math.sqrt(64),
+         math.sqrt(128), math.sqrt(256), math.sqrt(512)]
+sigma1 = numpy.array([1.3, 1.6, 1.6 * k, 1.6 * (k ** 2), 1.6 * (k ** 3), 1.6 * (k ** 4)])
+
+
+o1sc = [
+scipy.ndimage.filters.gaussian_filter(I_bw,sigma = sigma1[0]),
+scipy.ndimage.filters.gaussian_filter(I_bw,sigma = sigma1[1]),
+scipy.ndimage.filters.gaussian_filter(I_bw,sigma = sigma1[2]),
+scipy.ndimage.filters.gaussian_filter(I_bw,sigma = sigma1[3]),
+scipy.ndimage.filters.gaussian_filter(I_bw,sigma = sigma1[4])
+]
+
+I = [o1sc[1], o1sc[2]]
+
+sift_orientation(I, points,16)

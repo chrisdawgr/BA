@@ -49,17 +49,17 @@ def points_to_txt(points, filename_out, seperate_by):
     file_o.write(seperate_by)
   file_o.close()
 
-def txt_to_points(filename):
-  result = []
-  oo = open(filename, "r")
-  points_str = oo.read()
-  oo.close()
-  points_str = points_str.split()
+def points_to_txt_3_points(points, filename_out, seperate_by):
+  """
+  input = points, filename to output, how to seperate the lists, eg "\n", "\t", "\n\n" etc
+  output = file with filename_out with the points
+  """
+  file_o = open(filename_out, 'w')
 
-  for i in range(0, len(points_str), 2):
-    result.append([points_str[i], points_str[i + 1]])
-
-  return result
+  for i in points:
+    file_o.write(str(i[0]) + " " + str(i[1]) + " " + str(i[2]))
+    file_o.write(seperate_by)
+  file_o.close()
 
 
 def points_to_txt2(points, filename_out, seperate_by):
@@ -75,6 +75,7 @@ def points_to_txt2(points, filename_out, seperate_by):
     file_o.write(seperate_by)
   file_o.close()
 
+
 def txt_to_points(filename):
   result = []
   oo = open(filename, "r")
@@ -83,6 +84,17 @@ def txt_to_points(filename):
   points_str = points_str.split()
   for i in range(0, len(points_str), 2):
     result.append([int(points_str[i]), int(points_str[i + 1])])
+  return result
+
+
+def txt_to_3_points(filename):
+  result = []
+  oo = open(filename, "r")
+  points_str = oo.read()
+  oo.close()
+  points_str = points_str.split()
+  for i in range(0, len(points_str), 3):
+    result.append([int(points_str[i]), int(points_str[i + 1]), int(points_str[i + 2])])
   return result
 
 def matrix_substraction(m1, m2):
