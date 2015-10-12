@@ -135,3 +135,15 @@ def test_SIFT(filename, r, increment, iterations):
     print(filename, r + (i * increment))
     S.SIFT(filename, r + (i * increment))
 """
+"""
+def gauss_on_img(I_name, mask_size, sigma):
+  size_y = len(I)
+  size_x = len(I[0])
+  I_bw = cv2.imread(I_name, 0)
+
+  gauss_win = gauss(7, 2)
+  for y in range(mask_size, x - mask_size):
+    for x in range(mask_size, y - mask_size):
+
+
+"""
