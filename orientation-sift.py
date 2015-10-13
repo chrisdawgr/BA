@@ -43,7 +43,7 @@ def sift_orientation(I, points, window_size):
   min_point_size_y = window_size
   max_point_size_x = len(I[0][0]) - (window_size + 5)
   min_point_size_x = window_size 
-  gauss_window = h.gauss(window_size, 1.5)
+
   hold_mag = h.create_window(I[0], [35,35], window_size)
   hold_ori = h.create_window(I[0], [35,35], window_size)
   final_points = []
@@ -67,6 +67,9 @@ def sift_orientation(I, points, window_size):
     if ((p[0] < max_point_size_y and p[0] > min_point_size_y) and \
         (p[1] < max_point_size_x and p[1] > min_point_size_x)):
 
+      # the sigma value for the gauss window, is 1.5 * scale
+      # NOTE! Only works for first octave
+      gauss_window = h.gauss(window_size, 1.5 + (1 * p[2]))
       ip_window = h.create_window(I[p[2]], p, window_size + 2) 
 
       # creates bin for each point
