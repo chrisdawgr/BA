@@ -137,9 +137,8 @@ def sift_orientation(I, points, window_size):
   for i in  range(0, len(orien_of_bin)):
     o.write(str(orien_of_bin[i]) + "\t" + str(new_orien[i]) + "\n")
   o.close()
-  #print(orien_of_bin)
-  #print(len(bins))
-  return new_orien
+  print([points,new_orien])
+  return ([points, new_orien])
 
 
 
@@ -165,4 +164,4 @@ scipy.ndimage.filters.gaussian_filter(I_bw,sigma = sigma1[4])
 
 I = [o1sc[1], o1sc[2]]
 
-sift_orientation(I, points,16)
+a = sift_orientation(I, points,16)
