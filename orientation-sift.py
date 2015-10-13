@@ -106,28 +106,45 @@ def sift_orientation(I, points, window_size):
       orien_of_bin.append(holder_bin)
     i += 1
 
+  new_orien = list(orien_of_bin)
+  for i in range(0, len(orien_of_bin)):
+    holder = []
+    for j in orien_of_bin[i]:
+      if (j == 1):
+        A = 0
+        B = bins[i][0][j] 
+        C = bins[i][0][j]
+      if (j == 35):
+        A = bins[i][0][j-1]
+        B = bins[i][0][j]
+        C = 0
+      else:
+        A = bins[i][0][j - 1]
+        B = bins[i][0][j]
+        C = bins[i][0][j + 1]
+      a = A + (C-A)/2.0 -B
+      b = (C-A)/2.0
+      c = B
+      toppoint = -b / (2 * a)
+      point = toppoint * 10 + j * 10
+
+      if (point < 0):
+        point = 360.0 + point
+      holder.append(point)
+    new_orien[i] = holder
 
   o = open('orients.txt', 'w')
-  for i in orien_of_bin:
-    o.write(str(i) + "\n")
+  for i in  range(0, len(orien_of_bin)):
+    o.write(str(orien_of_bin[i]) + "\t" + str(new_orien[i]) + "\n")
   o.close()
   #print(orien_of_bin)
   #print(len(bins))
+  return new_orien
 
 
 
 I_bw = cv2.imread('erimitage2.jpg', 0)
 
-"""
-print(orientation22(I, 1, 0))
-print(orientation22(I, 1, 1))
-print(orientation22(I, 0, 1))
-print(orientation22(I, -1, 1))
-print(orientation22(I, -1, 0))
-print(orientation22(I, -1, -1))
-print(orientation22(I, 0, -1))
-print(orientation22(I, 1, -1))
-"""
 points = h.txt_to_3_points('interest_points_with_sigma.txt')
 #print(points)
 
