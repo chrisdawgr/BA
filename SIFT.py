@@ -35,10 +35,10 @@ def find_max_new(dog_scale,i,y,x,princip_cur):
     Dss = (dog_scale[y,x,i+1] + dog_scale[y,x,i-1] - 2 * dog_scale[y,x,i]) * 1.0 / 255
     Dxy = (dog_scale[y+1,x+1,i] - dog_scale[y+1,x-1,i] - dog_scale[y-1,x+1,i] + dog_scale[y-1,x-1,i]) * 0.25 / 255
     Dxs = (dog_scale[y,x+1,i+1] - dog_scale[y,x-1,i+1] - dog_scale[y,x+1,i-1] + dog_scale[y,x-1,i-1]) * 0.5 / 255 
-    Dys = (dog_scale[2,1,i+1] - dog_scale[y-1,x,i+1] - dog_scale[y+1,x,i-1] + dog_scale[y-1,x,i-1]) * 0.5 / 255  
+    Dys = (dog_scale[y+1,x,i+1] - dog_scale[y-1,x,i+1] - dog_scale[y+1,x,i-1] + dog_scale[y-1,x,i-1]) * 0.5 / 255  
     H = numpy.matrix([[Dxx, Dxy, Dxs], [Dxy, Dyy, Dys], [Dxs, Dys, Dss]])
     det = float(numpy.linalg.det(H))
-
+        
     DXX1 = (dog_scale[y,x+1,i] + dog_scale[y,x-1,i] - 2 * dog_scale[y,x,i]) * 1.0 
     DYY1 = (dog_scale[y+1,x,i] + dog_scale[y-1,x,i] - 2 * dog_scale[y,x,i]) * 1.0
     DSS1 = (dog_scale[y,x,i+1] + dog_scale[y,x,i-1] - 2 * dog_scale[y,x,i]) * 1.0
@@ -47,10 +47,13 @@ def find_max_new(dog_scale,i,y,x,princip_cur):
     DYS1 = (dog_scale[y+1,x,i+1] - dog_scale[y-1,x,i+1] - dog_scale[y+1,x,i-1] + dog_scale[y-1,x,i-1]) * 0.5
     H2 = numpy.matrix([[DXX1, DXY1, DXS1], [DXY1, DYY1, DYS1], [DXS1, DYS1, DSS1]]) 
     det2 = float(numpy.linalg.det(H2))
+    print det
+    print det2
+    print "\n"
 
     if (det > 0) and (det2 != 0):
       Dx = (dog_scale[y,x+1,i] - dog_scale[y,x-1,i]) * 0.5 / 255
-      Dy = (dog_scale[y+1,x,i] - dog_scale[y+1,x,i]) * 0.5 / 255
+      Dy = (dog_scale[y+1,x,i] - dog_scale[y-1,x,i]) * 0.5 / 255
       Ds = (dog_scale[y,x,i+1] - dog_scale[y,x,i-1]) * 0.5 / 255
       DX = numpy.matrix([[Dx], [Dy], [Ds]])
       tr = float(DXX1) + float(DYY1) + float(DSS1)
@@ -129,6 +132,7 @@ def SIFT(filename, r_mag):
   dogn2 = numpy.array(DoG_extrema_points_1_2)
   if (len(dogn1) > 1) and (len(dogn2)>1):
     result = numpy.vstack([dogn1, dogn2])
+    print result
     print "Number of points in first octave: %d" % len(result)
     #h.points_to_txt(result, "interest_points_sc1.txt", "\n")
     h.points_to_txt_3_points(result, "interest_points_sc1.txt", "\n")
@@ -180,5 +184,5 @@ def test_SIFT(filename, r, increment, iterations):
     print(filename, r + (i * increment))
     SIFT(filename, r + (i * increment))
 
-test_SIFT('erimitage2.jpg', 0.4, 0.1, 1)
+test_SIFT('erimitage.jpg', 0.4, 0.1, 1)
 
