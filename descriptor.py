@@ -31,13 +31,17 @@ def orientation(I, point):
   return(theta)
  
 
-def decriptor_representation(points_orientations, I):
+def decriptor_representation(Img, points_orientations):
+
+  I = cv2.imread(Img, 0)
+
   window_size = 16
   max_point_size_y = len(I) - (window_size + 2)
   min_point_size_y = window_size
   max_point_size_x = len(I[0]) - (window_size + 5)
   min_point_size_x = window_size 
   gauss_window = h.gauss(window_size, 8)
+  points = points_orientations
 
   final_points = []
   orien_of_bin = []
@@ -81,8 +85,8 @@ def decriptor_representation(points_orientations, I):
 
         v += 1
 
-    with open('file2.txt','a') as f_handle:
-      numpy.savetxt(f_handle, ori_bin[incrementeur], delimiter=" ", fmt="%s")
+    #with open('file2.txt','a') as f_handle:
+    #  numpy.savetxt(f_handle, ori_bin[incrementeur], delimiter=" ", fmt="%s")
 
     #numpy.savetxt('file2.txt', d_bin[incrementeur], delimiter=" ", fmt="%s")
     incrementeur += 1
@@ -99,20 +103,30 @@ def decriptor_representation(points_orientations, I):
           #print(ori_val, ori_val + 8*i)
           #print("\n\n")
           final_desc[w][8*i + ori_val] += mag_val
+  
+  for vec_i in range(0, len(final_desc)):
+    final_desc[vec_i] = final_desc[vec_i] / numpy.linalg.norm(final_desc[vec_i])
+    final_desc[vec_i] = numpy.clip(final_desc[vec_i], 0, 0.2)
+    final_desc[vec_i] = final_desc[vec_i] / numpy.linalg.norm(final_desc[vec_i])
 
 
-  for o in final_desc:
-    with open('descriptor.txt','a') as f_handle:
-      numpy.savetxt(f_handle, o, delimiter=" ", fmt="%s")
+  
+  oo = open("descriptor.txt", "w")
+  for ff in final_desc:
+    for j in range(0,128):
+      oo.write(str(ff[j]) + "\n")
+    oo.write("\n\n")
+  oo.close()
 
 
+
+  return(final_desc)
 
 """
-I_bw = cv2.imread('erimitage2.jpg', 0)
 
 points = h.txt_to_3_points_float('interest_P_ori_mag.txt')
 #print(points)
 
 
-decriptor_representation(points, I_bw)
+decriptor_representation(points, "filenamelol")
 """
