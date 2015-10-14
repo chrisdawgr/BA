@@ -9,58 +9,58 @@ import csv
 from PIL import Image
 import helperfunctions as h
 
-def find_max_new(dog_scale,y,x,princip_cur):
-  for i in range(1,3):
-    maxpoint = (dog_scale[y, x, i] > 0)
-    minpoint = (dog_scale[y, x, i] < 0)
-    # Run through 26 neighbours
-    for ci in range(-1,2):
-      for cy in range(-1,2):
-        for cx in range(1,2):
-          if cy == 0 and cx == 0 and ci == 0:
-            continue # perform next iteration as we are in orego.
-          maxpoint = maxpoint and dog_scale[y,x,i]>dog_scale[y+cy,x+cx,i+ci]
-          minpoint = minpoint and dog_scale[y,x,i]<dog_scale[y+cy,x+cx,i+ci]
-          # If point lies between max and min, we break
-          if not maxpoint and not minpoint:
-            return 0
+def find_max_new(dog_scale,i,y,x,princip_cur):
+  #for i in range(1,3):
+  maxpoint = (dog_scale[y, x, i] > 0)
+  minpoint = (dog_scale[y, x, i] < 0)
+  # Run through 26 neighbours
+  for ci in range(-1,2):
+    for cy in range(-1,2):
+      for cx in range(1,2):
+        if cy == 0 and cx == 0 and ci == 0:
+          continue # perform next iteration as we are in orego.
+        maxpoint = maxpoint and dog_scale[y,x,i]>dog_scale[y+cy,x+cx,i+ci]
+        minpoint = minpoint and dog_scale[y,x,i]<dog_scale[y+cy,x+cx,i+ci]
+        # If point lies between max and min, we break
         if not maxpoint and not minpoint:
-            return 0
+          return 0
       if not maxpoint and not minpoint:
-            return 0
-    if maxpoint == True or minpoint == True:
-      # Create array of neighbouring points 
-      Dxx = (dog_scale[y,x+1,i] + dog_scale[y,x-1,i] - 2 * dog_scale[y,x,i]) * 1.0 / 255
-      Dyy = (dog_scale[y+1,x,i] + dog_scale[y-1,x,i] - 2 * dog_scale[y,x,i]) * 1.0 / 255
-      Dss = (dog_scale[y,x,i+1] + dog_scale[y,x,i-1] - 2 * dog_scale[y,x,i]) * 1.0 / 255
-      Dxy = (dog_scale[y+1,x+1,i] - dog_scale[y+1,x-1,i] - dog_scale[y-1,x+1,i] + dog_scale[y-1,x-1,i]) * 0.25 / 255
-      Dxs = (dog_scale[y,x+1,i+1] - dog_scale[y,x-1,i+1] - dog_scale[y,x+1,i-1] + dog_scale[y,x-1,i-1]) * 0.5 / 255 
-      Dys = (dog_scale[2,1,i+1] - dog_scale[y-1,x,i+1] - dog_scale[y+1,x,i-1] + dog_scale[y-1,x,i-1]) * 0.5 / 255  
-      H = numpy.matrix([[Dxx, Dxy, Dxs], [Dxy, Dyy, Dys], [Dxs, Dys, Dss]])
-      det = float(numpy.linalg.det(H))
-
-      DXX1 = (dog_scale[y,x+1,i] + dog_scale[y,x-1,i] - 2 * dog_scale[y,x,i]) * 1.0 
-      DYY1 = (dog_scale[y+1,x,i] + dog_scale[y-1,x,i] - 2 * dog_scale[y,x,i]) * 1.0
-      DSS1 = (dog_scale[y,x,i+1] + dog_scale[y,x,i-1] - 2 * dog_scale[y,x,i]) * 1.0
-      DXY1 = (dog_scale[y+1,x+1,i] - dog_scale[y+1,x-1,i] - dog_scale[y-1,x+1,i] + dog_scale[y-1,x-1,i]) * 0.25 
-      DXS1 = (dog_scale[y,x+1,i+1] - dog_scale[y,x-1,i+1] - dog_scale[y,x+1,i-1] + dog_scale[y,x-1,i-1]) * 0.5 
-      DYS1 = (dog_scale[y+1,x,i+1] - dog_scale[y-1,x,i+1] - dog_scale[y+1,x,i-1] + dog_scale[y-1,x,i-1]) * 0.5
-      H2 = numpy.matrix([[DXX1, DXY1, DXS1], [DXY1, DYY1, DYS1], [DXS1, DYS1, DSS1]]) 
-      det2 = float(numpy.linalg.det(H2))
-
-      if (det > 0) and (det2 != 0):
-        Dx = (dog_scale[y,x+1,i] - dog_scale[y,x-1,i]) * 0.5 / 255
-        Dy = (dog_scale[y+1,x,i] - dog_scale[y+1,x,i]) * 0.5 / 255
-        Ds = (dog_scale[y,x,i+1] - dog_scale[y,x,i-1]) * 0.5 / 255
-        DX = numpy.matrix([[Dx], [Dy], [Ds]])
-        tr = float(DXX1) + float(DYY1) + float(DSS1)
-        r = float(princip_cur)
-        xhat = numpy.linalg.inv(H) * DX
-        if (abs(xhat[0]) < 0.5 and abs(xhat[1]) < 0.5 and abs(xhat[2]) < 0.5):
-          Dxhat = dog_scale[y,x,i] + (1/2.0) * DX.transpose() * xhat
-          if((abs(Dxhat) > 1.03) and (tr**2/det2 < (r + 1)**2 / r)):
-            return 1
+        return 0
+    if not maxpoint and not minpoint:
       return 0
+  if maxpoint == True or minpoint == True:
+    # Create array of neighbouring points 
+    Dxx = (dog_scale[y,x+1,i] + dog_scale[y,x-1,i] - 2 * dog_scale[y,x,i]) * 1.0 / 255
+    Dyy = (dog_scale[y+1,x,i] + dog_scale[y-1,x,i] - 2 * dog_scale[y,x,i]) * 1.0 / 255
+    Dss = (dog_scale[y,x,i+1] + dog_scale[y,x,i-1] - 2 * dog_scale[y,x,i]) * 1.0 / 255
+    Dxy = (dog_scale[y+1,x+1,i] - dog_scale[y+1,x-1,i] - dog_scale[y-1,x+1,i] + dog_scale[y-1,x-1,i]) * 0.25 / 255
+    Dxs = (dog_scale[y,x+1,i+1] - dog_scale[y,x-1,i+1] - dog_scale[y,x+1,i-1] + dog_scale[y,x-1,i-1]) * 0.5 / 255 
+    Dys = (dog_scale[2,1,i+1] - dog_scale[y-1,x,i+1] - dog_scale[y+1,x,i-1] + dog_scale[y-1,x,i-1]) * 0.5 / 255  
+    H = numpy.matrix([[Dxx, Dxy, Dxs], [Dxy, Dyy, Dys], [Dxs, Dys, Dss]])
+    det = float(numpy.linalg.det(H))
+
+    DXX1 = (dog_scale[y,x+1,i] + dog_scale[y,x-1,i] - 2 * dog_scale[y,x,i]) * 1.0 
+    DYY1 = (dog_scale[y+1,x,i] + dog_scale[y-1,x,i] - 2 * dog_scale[y,x,i]) * 1.0
+    DSS1 = (dog_scale[y,x,i+1] + dog_scale[y,x,i-1] - 2 * dog_scale[y,x,i]) * 1.0
+    DXY1 = (dog_scale[y+1,x+1,i] - dog_scale[y+1,x-1,i] - dog_scale[y-1,x+1,i] + dog_scale[y-1,x-1,i]) * 0.25 
+    DXS1 = (dog_scale[y,x+1,i+1] - dog_scale[y,x-1,i+1] - dog_scale[y,x+1,i-1] + dog_scale[y,x-1,i-1]) * 0.5 
+    DYS1 = (dog_scale[y+1,x,i+1] - dog_scale[y-1,x,i+1] - dog_scale[y+1,x,i-1] + dog_scale[y-1,x,i-1]) * 0.5
+    H2 = numpy.matrix([[DXX1, DXY1, DXS1], [DXY1, DYY1, DYS1], [DXS1, DYS1, DSS1]]) 
+    det2 = float(numpy.linalg.det(H2))
+
+    if (det > 0) and (det2 != 0):
+      Dx = (dog_scale[y,x+1,i] - dog_scale[y,x-1,i]) * 0.5 / 255
+      Dy = (dog_scale[y+1,x,i] - dog_scale[y+1,x,i]) * 0.5 / 255
+      Ds = (dog_scale[y,x,i+1] - dog_scale[y,x,i-1]) * 0.5 / 255
+      DX = numpy.matrix([[Dx], [Dy], [Ds]])
+      tr = float(DXX1) + float(DYY1) + float(DSS1)
+      r = float(princip_cur)
+      xhat = numpy.linalg.inv(H) * DX
+      if (abs(xhat[0]) < 0.5 and abs(xhat[1]) < 0.5 and abs(xhat[2]) < 0.5):
+        Dxhat = dog_scale[y,x,i] + (1/2.0) * DX.transpose() * xhat
+        if((abs(Dxhat) > 1.03) and (tr**2/det2 < (r + 1)**2 / r)):
+          return 1
+    return 0
 
 def SIFT(filename, r_mag):
   """
@@ -112,7 +112,8 @@ def SIFT(filename, r_mag):
     DoG_pictures_scale_4[:,:,i] = o4sc[:,:,i+1] - o4sc[:,:,i]
   
   # Initialize arrays for keypoints
-  DoG_extrema_points_1 = []
+  DoG_extrema_points_1_1 = []
+  DoG_extrema_points_1_2 = []
   DoG_extrema_points_2 = []
   DoG_extrema_points_3 = []
   DoG_extrema_points_4 = []
@@ -120,16 +121,21 @@ def SIFT(filename, r_mag):
   print("Finding points for scale 1")
   for y in range(3, I_bw.shape[0] - 3):
     for x in range(3, I_bw.shape[1] - 3):
-      if (find_max_new(DoG_pictures_scale_1,y,x, r_mag) == 1):
-        DoG_extrema_points_1.append([y,x,0])
-  dogn1 =  numpy.array(DoG_extrema_points_1)
-  if (len(dogn1) > 1):
-    result = numpy.vstack([dogn1])
+      if (find_max_new(DoG_pictures_scale_1,1,y,x, r_mag) == 1):
+        DoG_extrema_points_1_1.append([y,x,0])
+      if (find_max_new(DoG_pictures_scale_1,2,y,x, r_mag) == 1):
+        DoG_extrema_points_1_2.append([y,x,1])
+  dogn1 =  numpy.array(DoG_extrema_points_1_1)
+  dogn2 = numpy.array(DoG_extrema_points_1_2)
+  if (len(dogn1) > 1) and (len(dogn2)>1):
+    result = numpy.vstack([dogn1, dogn2])
     print "Number of points in first octave: %d" % len(result)
-    h.points_to_txt(result, "interest_points_sc1.txt", "\n")
-    h.points_to_txt_3_points(result, "interest_points_with_sigma_sc1.txt", "\n")
+    #h.points_to_txt(result, "interest_points_sc1.txt", "\n")
+    h.points_to_txt_3_points(result, "interest_points_sc1.txt", "\n")
     h.color_pic(I, result, filename[:-4] + "-sift_sc1-"+ "r-" + str(r_mag) + ".jpg")
   
+  # TODO add scales
+  """
   print "Finding points for scale 2"
   for y in range(3, I1.shape[0] - 3):
     for x in range(3,  I1.shape[1] - 3):
@@ -167,11 +173,12 @@ def SIFT(filename, r_mag):
     print "Number of points in fourth octave: %d" % len(result3)
     h.points_to_txt(result3, "interest_points_sc4.txt", "\n")
     h.color_pic(I3, result3, filename[:-4] + "-sift_sc4-"+ "r-" + str(r_mag) + ".jpg")
+  """
 
 def test_SIFT(filename, r, increment, iterations):
   for i in range(0, iterations):
     print(filename, r + (i * increment))
     SIFT(filename, r + (i * increment))
 
-test_SIFT('mark.jpg', 10, 0.1, 1)
+test_SIFT('erimitage2.jpg', 0.4, 0.1, 1)
 
