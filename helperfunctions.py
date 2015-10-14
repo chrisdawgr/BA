@@ -97,6 +97,18 @@ def txt_to_3_points(filename):
     result.append([int(points_str[i]), int(points_str[i + 1]), int(points_str[i + 2])])
   return result
 
+
+def txt_to_3_points_float(filename):
+  result = []
+  oo = open(filename, "r")
+  points_str = oo.read()
+  oo.close()
+  points_str = points_str.split()
+  for i in range(0, len(points_str), 3):
+    result.append([int(points_str[i]), int(points_str[i + 1]), float(points_str[i + 2])])
+  return result
+
+
 def matrix_substraction(m1, m2):
   dim = m1.shape
   height = dim[0]

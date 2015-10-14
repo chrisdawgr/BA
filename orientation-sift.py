@@ -32,6 +32,7 @@ def orientation(I, point):
  
 
 def sift_orientation(I, points, window_size):
+  window_size = 16
   """
   Input : image I, interest points, size of window
   Output: assigns an orientation to the interest points
@@ -70,6 +71,7 @@ def sift_orientation(I, points, window_size):
       # the sigma value for the gauss window, is 1.5 * scale
       # NOTE! Only works for first octave
       gauss_window = h.gauss(window_size, 1.5 + (1 * p[2]))
+      print(p)
       ip_window = h.create_window(I[p[2]], p, window_size + 2) 
 
       # creates bin for each point
@@ -140,11 +142,24 @@ def sift_orientation(I, points, window_size):
   for i in  range(0, len(orien_of_bin)):
     o.write(str(orien_of_bin[i]) + "\t" + str(new_orien[i]) + "\n")
   o.close()
-  print([points,new_orien])
-  return ([points, new_orien])
 
 
+  #print([final_points,new_orien])
+  final_points2 = []
+  for i in range(0, len(final_points)):
+    for o in new_orien[i]:
+      final_points2.append([final_points[i][0], final_points[i][1], o])
 
+  oo = open('interest_p_ori_mag.txt', 'w')
+  for pp in final_points2:
+    oo.write(str(pp[0]) + " " + str(pp[1]) + " " + str(pp[2]) + "\n")
+  oo.close()
+
+  #print(final_points2)
+  return (final_points2)
+
+
+"""
 I_bw = cv2.imread('erimitage2.jpg', 0)
 
 points = h.txt_to_3_points('interest_points_with_sigma.txt')
@@ -168,3 +183,4 @@ scipy.ndimage.filters.gaussian_filter(I_bw,sigma = sigma1[4])
 I = [o1sc[1], o1sc[2]]
 
 a = sift_orientation(I, points,16)
+"""
