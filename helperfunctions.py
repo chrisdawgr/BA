@@ -7,6 +7,7 @@ def gauss(size, sigma):
   Input : size of window, sigma value
   Output: creates a gauss window of size size
   """
+  #NOTE: Guys at NVidia suggests a gausskernel of size 3*sigma
   D = numpy.zeros([size, size])
   gauss_kernel = numpy.zeros([size, size])
   for y in range(0, size):
@@ -18,6 +19,7 @@ def gauss(size, sigma):
       exponent = (x1**2.0 + y1**2.0)/(2.0 * sigma**2.0)
       gauss_calc = frac * math.exp(- exponent)
       gauss_kernel[y][x] = gauss_calc
+  gauss_kernel = gauss_kernel / sum(sum(gauss_kernel))
   return(gauss_kernel)
 
 def create_window(I, point, window_size):
