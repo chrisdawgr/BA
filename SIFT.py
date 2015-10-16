@@ -10,13 +10,12 @@ from PIL import Image
 import helperfunctions as h
 
 def find_max_new(dog_scale,i,y,x,princip_cur):
-  #for i in range(1,3):
   maxpoint = (dog_scale[y, x, i] > 0)
   minpoint = (dog_scale[y, x, i] < 0)
   # Run through 26 neighbours
   for ci in range(-1,2):
     for cy in range(-1,2):
-      for cx in range(1,2):
+      for cx in range(-1,2):
         if cy == 0 and cx == 0 and ci == 0:
           continue # perform next iteration as we are in orego.
         maxpoint = maxpoint and dog_scale[y,x,i]>dog_scale[y+cy,x+cx,i+ci]
@@ -38,7 +37,7 @@ def find_max_new(dog_scale,i,y,x,princip_cur):
     Dys = (dog_scale[y+1,x,i+1] - dog_scale[y-1,x,i+1] - dog_scale[y+1,x,i-1] + dog_scale[y-1,x,i-1]) * 0.5 / 255  
     H = numpy.matrix([[Dxx, Dxy, Dxs], [Dxy, Dyy, Dys], [Dxs, Dys, Dss]])
     det = float(numpy.linalg.det(H))
-        
+
     DXX1 = (dog_scale[y,x+1,i] + dog_scale[y,x-1,i] - 2 * dog_scale[y,x,i]) * 1.0 
     DYY1 = (dog_scale[y+1,x,i] + dog_scale[y-1,x,i] - 2 * dog_scale[y,x,i]) * 1.0
     DSS1 = (dog_scale[y,x,i+1] + dog_scale[y,x,i-1] - 2 * dog_scale[y,x,i]) * 1.0
@@ -47,9 +46,6 @@ def find_max_new(dog_scale,i,y,x,princip_cur):
     DYS1 = (dog_scale[y+1,x,i+1] - dog_scale[y-1,x,i+1] - dog_scale[y+1,x,i-1] + dog_scale[y-1,x,i-1]) * 0.5
     H2 = numpy.matrix([[DXX1, DXY1, DXS1], [DXY1, DYY1, DYS1], [DXS1, DYS1, DSS1]]) 
     det2 = float(numpy.linalg.det(H2))
-    print det
-    print det2
-    print "\n"
 
     if (det > 0) and (det2 != 0):
       Dx = (dog_scale[y,x+1,i] - dog_scale[y,x-1,i]) * 0.5 / 255
@@ -60,7 +56,7 @@ def find_max_new(dog_scale,i,y,x,princip_cur):
       r = float(princip_cur)
       xhat = numpy.linalg.inv(H) * DX
       if (abs(xhat[0]) < 0.5 and abs(xhat[1]) < 0.5 and abs(xhat[2]) < 0.5):
-        Dxhat = dog_scale[y,x,i] + (1/2.0) * DX.transpose() * xhat
+        Dxhat = dog_scale[y,x,i] + (1/2.0) * DX.transpose() * xhat # CT old was point, but shouldnt differ
         if((abs(Dxhat) > 1.03) and (tr**2/det2 < (r + 1)**2 / r)):
           return 1
     return 0
@@ -72,47 +68,46 @@ def SIFT(filename, r_mag):
   s = 3
   k = 2 ** (1.0 / s)
   I = cv2.imread(filename)
-  I1 = misc.imresize(I, 50, 'bilinear')
-  I2 = misc.imresize(I1, 50, 'bilinear')
-  I3 = misc.imresize(I2, 50, 'bilinear')
   I_bw = cv2.imread(filename, 0)
+  I1 = misc.imresize(I_bw, 50, 'bilinear').astype(int)
+  I2 = misc.imresize(I1, 50, 'bilinear').astype(int)
+  I3 = misc.imresize(I2, 50, 'bilinear').astype(int)
   dim = I_bw.shape
-  #height1 = len(I1)
-  #length1 = len(I1[1])
-  #height2 = len(I2)
-  #length2 = len(I2[1])    
-  #height3 = len(I3)
-  #length3 = len(I3[1])
-  
-  sigma1 = [math.sqrt(0.5), math.sqrt(1), math.sqrt(2), math.sqrt(4),
-           math.sqrt(8), math.sqrt(16), math.sqrt(32), math.sqrt(64),
-           math.sqrt(128), math.sqrt(256), math.sqrt(512)]
-  #sigma1 = numpy.array([1.3, 1.6, 1.6 * k, 1.6 * (k ** 2), 1.6 * (k ** 3), 1.6 * (k ** 4)])
+  # Sigma value we defined, yields more responses than the one below;
+  #sigma1 = [math.sqrt(0.5), math.sqrt(1), math.sqrt(2), math.sqrt(4),
+           #math.sqrt(8), math.sqrt(16), math.sqrt(32), math.sqrt(64),
+           #math.sqrt(128), math.sqrt(256), math.sqrt(512)]
+  # Sigma values for FIRST SCALE ONLY proposed by Lowe, yields less responses:
+  sigma1 = numpy.array([1.3, 1.6, 1.6 * k, 1.6 * (k ** 2), 1.6 * (k ** 3), 1.6 * (k ** 4)])
 
   print "creating gaussian pyramids.."
   o1sc = numpy.zeros((I_bw.shape[0],I_bw.shape[1],5))
-  o2sc = numpy.zeros((I_bw.shape[0],I_bw.shape[1],5))
-  o3sc = numpy.zeros((I_bw.shape[0],I_bw.shape[1],5))
-  o4sc = numpy.zeros((I_bw.shape[0],I_bw.shape[1],5))
+  o2sc = numpy.zeros((I1.shape[0],I1.shape[1],5))
+  o3sc = numpy.zeros((I2.shape[0],I2.shape[1],5))
+  o4sc = numpy.zeros((I3.shape[0],I3.shape[1],5))
 
   for i in range(0,5):
     o1sc[:,:,i] = scipy.ndimage.filters.gaussian_filter(I_bw,sigma = sigma1[i])
-    o2sc[:,:,i] = scipy.ndimage.filters.gaussian_filter(I_bw,sigma = sigma1[i+2])
-    o3sc[:,:,i] = scipy.ndimage.filters.gaussian_filter(I_bw,sigma = sigma1[i+4])
-    o4sc[:,:,i] = scipy.ndimage.filters.gaussian_filter(I_bw,sigma = sigma1[i+6])
-
+    o2sc[:,:,i] = scipy.ndimage.filters.gaussian_filter(I1,sigma = sigma1[i]) #+2
+    o3sc[:,:,i] = scipy.ndimage.filters.gaussian_filter(I2,sigma = sigma1[i]) #+4 
+    o4sc[:,:,i] = scipy.ndimage.filters.gaussian_filter(I3,sigma = sigma1[i]) # +6
   # Calculate difference of gaussian images.
   print "creating difference of gaussian pyramids.."
   DoG_pictures_scale_1 = numpy.zeros((I_bw.shape[0],I_bw.shape[1],4))
-  DoG_pictures_scale_2 = numpy.zeros((I_bw.shape[0],I_bw.shape[1],4))
-  DoG_pictures_scale_3 = numpy.zeros((I_bw.shape[0],I_bw.shape[1],4))
-  DoG_pictures_scale_4 = numpy.zeros((I_bw.shape[0],I_bw.shape[1],4))
+  DoG_pictures_scale_2 = numpy.zeros((I1.shape[0],I1.shape[1],4))
+  DoG_pictures_scale_3 = numpy.zeros((I2.shape[0],I2.shape[1],4))
+  DoG_pictures_scale_4 = numpy.zeros((I3.shape[0],I3.shape[1],4))
 
   for i in range(0,4):
+    # CT: TRY WITH HELPERFUNCTION MINUS
     DoG_pictures_scale_1[:,:,i] = o1sc[:,:,i+1] - o1sc[:,:,i]
+    #DoG_pictures_scale_1[:,:,i] = h.matrix_substraction(o1sc[:,:,i+1],o1sc[:,:,i]) # ct
     DoG_pictures_scale_2[:,:,i] = o2sc[:,:,i+1] - o2sc[:,:,i]
     DoG_pictures_scale_3[:,:,i] = o3sc[:,:,i+1] - o3sc[:,:,i]
     DoG_pictures_scale_4[:,:,i] = o4sc[:,:,i+1] - o4sc[:,:,i]
+  #print DoG_pictures_scale_1[:,:,1]
+  #cv2.imshow('image',DoG_pictures_scale_1[:,:,0])
+  #cv2.waitKey(0)
   
   # Initialize arrays for keypoints
   DoG_extrema_points_1_1 = []
@@ -132,7 +127,7 @@ def SIFT(filename, r_mag):
   dogn2 = numpy.array(DoG_extrema_points_1_2)
   if (len(dogn1) > 1) and (len(dogn2)>1):
     result = numpy.vstack([dogn1, dogn2])
-    print result
+    #print result
     print "Number of points in first octave: %d" % len(result)
     #h.points_to_txt(result, "interest_points_sc1.txt", "\n")
     h.points_to_txt_3_points(result, "interest_points_sc1.txt", "\n")
