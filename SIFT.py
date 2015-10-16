@@ -174,10 +174,13 @@ def SIFT(filename, r_mag):
     h.color_pic(I3, result3, filename[:-4] + "-sift_sc4-"+ "r-" + str(r_mag) + ".jpg")
   """
 
+  return(result)
+
 def test_SIFT(filename, r, increment, iterations):
   for i in range(0, iterations):
     print(filename, r + (i * increment))
     SIFT(filename, r + (i * increment))
+
 
 test_SIFT('erimitage.jpg', 0.4, 0.1, 1)
 
