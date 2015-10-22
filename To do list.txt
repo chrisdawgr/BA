@@ -3,10 +3,14 @@ Kig på Lowe 1999 for alternativ keypoint localization method
 Implementer basal descriptor.
 Skal blobs være meget distinctive i.e. skal punktet være x gange større eller mindre end den næst mindste største
 Look at SURF
+NON-MAXIMUS surpression CORNER DETECTION METHODS!
+
 
 AB:
 Orientation of keypoints
 Orientere sig om RANSAC og PROSAC
+
+
 
 
 Idéer:
