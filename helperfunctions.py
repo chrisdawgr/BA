@@ -1,13 +1,13 @@
 import cv2
 import math
-import numpy
+import numpy as np
 
 def gauss(size, sigma):
   """
   Creates Gusssian kernel
   """
-  D = numpy.zeros([size, size])
-  gauss_kernel = numpy.zeros([size, size])
+  D = np.zeros([size, size])
+  gauss_kernel = np.zeros([size, size])
   stepsize = 9.0 / size
   half = int(size/2)
   y1 = -4.5
@@ -29,8 +29,8 @@ def gaussdx(size, sigma):
   Creates a kernel with the first derivative of gauss
   """
   #NOTE: Guys at NVidia suggests a gausskernel of size 3*sigma
-  D = numpy.zeros([size, size])
-  gauss_kernel = numpy.zeros([size, size])
+  D = np.zeros([size, size])
+  gauss_kernel = np.zeros([size, size])
   stepsize = 9.0 / size
   half = int(size/2)
   y1 = -4.5
@@ -45,11 +45,11 @@ def gaussdx(size, sigma):
   return(gauss_kernel)
 
 def gaussdy(size, sigma):
-  return numpy.transpose((gaussdx(size,sigma)))
+  return np.transpose((gaussdx(size,sigma)))
 
 def gauss2x(size, sigma):
-  D = numpy.zeros([size, size])
-  gauss_kernel = numpy.zeros([size, size])
+  D = np.zeros([size, size])
+  gauss_kernel = np.zeros([size, size])
   stepsize = 9.0 / size
   half = int(size/2)
   y1 = -4.5
@@ -66,8 +66,8 @@ def gauss2x(size, sigma):
   return(gauss_kernel)
 
 def gauss2y(size, sigma):
-  D = numpy.zeros([size, size])
-  gauss_kernel = numpy.zeros([size, size])
+  D = np.zeros([size, size])
+  gauss_kernel = np.zeros([size, size])
   stepsize = 9.0 / size
   half = int(size/2)
   y1 = -4.5
@@ -84,8 +84,8 @@ def gauss2y(size, sigma):
   return(gauss_kernel)
 
 def gauss2xy(size, sigma):
-  D = numpy.zeros([size, size])
-  gauss_kernel = numpy.zeros([size, size])
+  D = np.zeros([size, size])
+  gauss_kernel = np.zeros([size, size])
   stepsize = 9.0 / size
   half = int(size/2)
   y1 = -4.5
@@ -107,7 +107,7 @@ def create_window(I, point, window_size):
   Input : Image, [y,x], size of window
   Output: Creates a window with size window_size of I, and makes point middle
   """
-  D = numpy.empty([window_size, window_size])
+  D = np.empty([window_size, window_size])
   half_w_size = window_size/2
   y_p = point[0]
   x_p = point[1]
@@ -195,7 +195,7 @@ def matrix_substraction(m1, m2):
   dim = m1.shape
   height = dim[0]
   length = dim[1]
-  mat = numpy.zeros([height, length], dtype='uint8')
+  mat = np.zeros([height, length], dtype='uint8')
   for y in range (0, height):
     for x in range(0, length):
       if (m1[y][x] < m2[y][x]):
@@ -205,12 +205,18 @@ def matrix_substraction(m1, m2):
   return(mat)
 
 def color_pic(*arg):
+  """ 
+  input: I, points
+  output: pic
+  """
   I = arg[0]
   points = arg[1]
 
   if (len(arg) >= 2):
     for p in points:
       I[p[0]][p[1]] = [0,0,255]
+    cv2.imshow('image', I)
+    cv2.waitKey(0)
 
   if (len(arg) == 3):
     name = arg[2]
