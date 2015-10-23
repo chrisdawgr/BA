@@ -4,80 +4,103 @@ import numpy
 
 def gauss(size, sigma):
   """
-  Input : size of window, sigma value
-  Output: creates a gauss window of size size
+  Creates Gusssian kernel
   """
-  #NOTE: Guys at NVidia suggests a gausskernel of size 3*sigma
   D = numpy.zeros([size, size])
   gauss_kernel = numpy.zeros([size, size])
+  stepsize = 9.0 / size
+  half = int(size/2)
+  y1 = -4.5
   for y in range(0, size):
+    x1 = -4.5
     for x in range(0, size):
-      half = int(size/2)
-      x1 = x - half
-      y1 = y - half
       frac = (1.0/(2.0 * math.pi * sigma**2)) 
       exponent = (x1**2.0 + y1**2.0)/(2.0 * sigma**2.0)
       gauss_calc = frac * math.exp(- exponent)
       gauss_kernel[y][x] = gauss_calc
+      x1 += stepsize
+    y1 += stepsize
   gauss_kernel = gauss_kernel / sum(sum(gauss_kernel))
   return(gauss_kernel)
 
-def gauss2x(size, sigma):
+
+def gaussdx(size, sigma):
   """
-  Input : size of window, sigma value
-  Output: creates a gauss window of size size
+  Creates a kernel with the first derivative of gauss
   """
   #NOTE: Guys at NVidia suggests a gausskernel of size 3*sigma
   D = numpy.zeros([size, size])
   gauss_kernel = numpy.zeros([size, size])
+  stepsize = 9.0 / size
+  half = int(size/2)
+  y1 = -4.5
   for y in range(0, size):
+    x1 = -4.5
     for x in range(0, size):
-      half = int(size/2)
-      x1 = x - half
-      y1 = y - half
-      frac = ((x1**2-sigma**2)/(2.0 * math.pi * sigma**6)) 
+      gauss_calc = (-((x1/(2.0*math.pi*sigma**4.0)*(math.exp(-((x1**2.0+y1**2.0)/(2.0*sigma**2.0)))))))
+      gauss_kernel[y][x] = gauss_calc
+      x1 += stepsize
+    y1 += stepsize
+  gauss_kernel = gauss_kernel / sum(sum(gauss_kernel))
+  return(gauss_kernel)
+
+def gaussdy(size, sigma):
+  return numpy.transpose((gaussdx(size,sigma)))
+
+def gauss2x(size, sigma):
+  D = numpy.zeros([size, size])
+  gauss_kernel = numpy.zeros([size, size])
+  stepsize = 9.0 / size
+  half = int(size/2)
+  y1 = -4.5
+  for y in range(0, size):
+    x1 = -4.5
+    for x in range(0, size):
+      frac = -1*((x1**2-sigma**2)/(2.0 * math.pi * sigma**4.0))
       exponent = (x1**2.0 + y1**2.0)/(2.0 * sigma**2.0)
       gauss_calc = frac * math.exp(- exponent)
       gauss_kernel[y][x] = gauss_calc
+      x1 += stepsize
+    y1 += stepsize
   gauss_kernel = gauss_kernel / sum(sum(gauss_kernel))
   return(gauss_kernel)
 
 def gauss2y(size, sigma):
-  #NOTE: Guys at NVidia suggests a gausskernel of size 3*sigma
   D = numpy.zeros([size, size])
   gauss_kernel = numpy.zeros([size, size])
+  stepsize = 9.0 / size
+  half = int(size/2)
+  y1 = -4.5
   for y in range(0, size):
+    x1 = -4.5
     for x in range(0, size):
-      half = int(size/2)
-      x1 = x - half
-      y1 = y - half
-      frac = (y1**2-sigma**2/(2.0 * math.pi * sigma**6)) 
+      frac = -1*((y1**2-sigma**2)/(2.0 * math.pi * sigma**6.0))
       exponent = (x1**2.0 + y1**2.0)/(2.0 * sigma**2.0)
       gauss_calc = frac * math.exp(- exponent)
       gauss_kernel[y][x] = gauss_calc
+      x1 += stepsize
+    y1 += stepsize
   gauss_kernel = gauss_kernel / sum(sum(gauss_kernel))
   return(gauss_kernel)
 
 def gauss2xy(size, sigma):
-  """
-  Input : size of window, sigma value
-  Output: creates a gauss window of size size
-  """
-  #NOTE: Guys at NVidia suggests a gausskernel of size 3*sigma
   D = numpy.zeros([size, size])
   gauss_kernel = numpy.zeros([size, size])
+  stepsize = 9.0 / size
+  half = int(size/2)
+  y1 = -4.5
   for y in range(0, size):
+    x1 = -4.5
     for x in range(0, size):
-      half = int(size/2)
-      x1 = x - half
-      y1 = y - half
-      top = y1*x1*math.exp((-0.5)*(y1**2+x**2)/sigma**2)
-      butt = math.pi * sigma**6
-
-      gauss_calc = 0.5 * (top/butt)
+      first = ((x1*y1)/2.0*math.pi**6.0)
+      second = math.exp(-((x1**2.0+y1**2.0)/(2.0*sigma**2.0)))
+      gauss_calc = first*second
       gauss_kernel[y][x] = gauss_calc
+      x1 += stepsize
+    y1 += stepsize
   gauss_kernel = gauss_kernel / sum(sum(gauss_kernel))
-  return(gauss_kernel)  
+  return(gauss_kernel)
+
 
 def create_window(I, point, window_size):
   """
@@ -191,42 +214,4 @@ def color_pic(*arg):
 
   if (len(arg) == 3):
     name = arg[2]
-    cv2.imwrite(name, I)      
-
-
-"""
-Testing of the functions
-"""
-
-
-"""
-print("this is A:\n")
-A = [[I[78][246], I[78][247], I[78][248]], \
-     [I[79][246], I[79][247], I[79][248]], \
-     [I[80][246], I[80][247], I[80][248]]]
-print(numpy.array(A))
-print("end of A \n\n")
-print("this is D:")
-D = create_window(I, [79,247], 5)
-print(D)
-print("end of D \n\n")
-"""
-
-"""
-def test_SIFT(filename, r, increment, iterations):
-  for i in range(0, iterations):
-    print(filename, r + (i * increment))
-    S.SIFT(filename, r + (i * increment))
-"""
-"""
-def gauss_on_img(I_name, mask_size, sigma):
-  size_y = len(I)
-  size_x = len(I[0])
-  I_bw = cv2.imread(I_name, 0)
-
-  gauss_win = gauss(7, 2)
-  for y in range(mask_size, x - mask_size):
-    for x in range(mask_size, y - mask_size):
-
-
-"""
+    cv2.imwrite(name, I)
