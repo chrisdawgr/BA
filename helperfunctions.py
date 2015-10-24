@@ -286,6 +286,8 @@ def oneNN(descss1, descss2, pp1, pp2):
   print(len(descss2), len(pp2))
   res_1 = []
   res_2 = []
+  res_d_1 = []
+  res_d_2 = []
   p1 = []
   p2 = []
   descs1 = []
@@ -319,9 +321,42 @@ def oneNN(descss1, descss2, pp1, pp2):
 
     res_1.append(p1[i_desc1])
     res_2.append(p2[s_dist_index2])
+    res_d_1.append(descs1[i_desc1])
+    res_d_2.append(descs2[s_dist_index2])
+    #print(s_dist_index2)
 
   if(ret_flag == 0):
-    return(res_1, res_2)
+    return(res_1, res_2, res_d_1, res_d_2)
   else:
     print("heer")
-    return(res_2, res_1)
+    return(res_2, res_1, res_d_2, res_d_1)
+
+
+def advanced_oneNN(descss1, descss2, pp1, pp2):
+  (res_p1, res_p2, res_des1, res_des2) = oneNN(descss1, descss2, pp1, pp2)
+  new_res_p1 = []
+  new_res_p2 = []
+
+  for point1 in range(0, len(res_p1)):
+    fst_shortest_index = point1
+    fst_shortest_dist = np.linalg.norm(res_des1[point1] - res_des2[point1])
+    scn_shortest_index = 0
+    scn_shortest_dist = float("inf")
+    
+    for point2 in range(0, len(pp2)):
+      if (np.all(descss2[point2] != res_des2[point1])):
+        dist = np.linalg.norm(res_des1[point1] - descss2[point2])
+        print(dist, fst_shortest_dist)
+        if (scn_shortest_dist > dist):
+          scn_shortest_dist = dist
+          scn_shortest_index = point2
+
+      #else:
+      #  print(point2, "these are identical")
+
+    if (fst_shortest_dist / scn_shortest_dist < 0.8):
+      #print(fst_shortest_dist, scn_shortest_dist)
+      new_res_p1.append(res_p1[point1])
+      new_res_p2.append(res_p2[point1])
+
+  return(new_res_p1, new_res_p2)
