@@ -56,6 +56,7 @@ def surf_descriptor(I_name, keypoints):
   filtered_points = []
   keypoints_area = []
   keypoint_descriptor = []
+  final_keypoints = []
 
   for p in keypoints:
     max_size_x = len(I_bw)
@@ -66,6 +67,7 @@ def surf_descriptor(I_name, keypoints):
       keypoints_area.append([[p[0], p[1], p[2]], \
       np.zeros([round_four(20 * p[2]), round_four(20 * p[2])]), 
       np.zeros([round_four(20 * p[2]), round_four(20 * p[2])])])
+      final_keypoints.append([p[0], p[1]])
   
   #keypoint area = [[y, x, s], d_x, d_y]
   for p_a in keypoints_area:
@@ -82,7 +84,7 @@ def surf_descriptor(I_name, keypoints):
 
     for y in range(-len_p, len_p):
       for x in range(-len_p, len_p):
-        window_x_y = h2.create_window(I, [y + p_a[0][0], x + p_a[0][1]], len(haar_window_x)) 
+        window_x_y = h2.create_window(I_bw, [y + p_a[0][0], x + p_a[0][1]], len(haar_window_x)) 
         d_x[y + len_p, x + len_p] = np.sum(np.multiply(haar_window_x, window_x_y))
         d_y[y + len_p, x + len_p] = np.sum(np.multiply(haar_window_y, window_x_y))
 
@@ -124,17 +126,16 @@ def surf_descriptor(I_name, keypoints):
 
     keypoint_descriptor.append(descriptor)
 
-    for k in range(0, keypoint_descriptor):
+    for k in range(0, len(keypoint_descriptor)):
       keypoint_descriptor[k] = keypoint_descriptor[k] / np.linalg.norm(keypoint_descriptor[k])
 
 
-  return(keypoint_descriptor)
+  return(keypoint_descriptor, final_keypoints)
 
 
-p1 = 
-I = cv2.imread("erimitage2.jpg", 0)
-points = surf_descriptor("erimitage2.jpg", p1)
-print(points)
+#I = cv2.imread("erimitage2.jpg", 0)
+#points = surf_descriptor("erimitage2.jpg", p1)
+#print(points)
    
 """
 def fuck(p):
