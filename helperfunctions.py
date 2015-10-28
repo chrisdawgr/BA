@@ -10,9 +10,13 @@ def gauss(size, sigma):
   gauss_kernel = np.zeros([size, size])
   stepsize = 9.0 / size
   half = int(size/2)
-  y1 = -4.5
+  if (size > 9):
+    stepsize = 9.0 / (size + (size/9))
+  else:
+    stepsize = 9.0 / (size)
+  y1 = -4.0
   for y in range(0, size):
-    x1 = -4.5
+    x1 = -4.0
     for x in range(0, size):
       frac = (1.0/(2.0 * math.pi * sigma**2)) 
       exponent = (x1**2.0 + y1**2.0)/(2.0 * sigma**2.0)
@@ -20,7 +24,7 @@ def gauss(size, sigma):
       gauss_kernel[y][x] = gauss_calc
       x1 += stepsize
     y1 += stepsize
-  gauss_kernel = gauss_kernel / sum(sum(gauss_kernel))
+  gauss_kernel = gauss_kernel / sum(sum(abs(gauss_kernel)))
   return(gauss_kernel)
 
 
@@ -32,16 +36,20 @@ def gaussdx(size, sigma):
   D = np.zeros([size, size])
   gauss_kernel = np.zeros([size, size])
   stepsize = 9.0 / size
+  if (size > 9):
+    stepsize = 9.0 / (size + (size/9))
+  else:
+    stepsize = 9.0 / (size)
   half = int(size/2)
-  y1 = -4.5
+  y1 = -4.0
   for y in range(0, size):
-    x1 = -4.5
+    x1 = -4.0
     for x in range(0, size):
       gauss_calc = (((-x1/(2.0*math.pi*sigma**4.0)*(math.exp(-((x1**2.0+y1**2.0)/(2.0*sigma**2.0)))))))
       gauss_kernel[y][x] = gauss_calc
       x1 += stepsize
     y1 += stepsize
-  gauss_kernel = gauss_kernel / sum(sum(gauss_kernel))
+  gauss_kernel = gauss_kernel / sum(sum(abs(gauss_kernel)))
   return(gauss_kernel)
 
 def gaussdy(size, sigma):
@@ -52,9 +60,13 @@ def gauss2x(size, sigma):
   gauss_kernel = np.zeros([size, size])
   stepsize = 9.0 / size
   half = int(size/2)
-  y1 = -4.5
+  if (size > 9):
+    stepsize = 9.0 / (size + (size/9))
+  else:
+    stepsize = 9.0 / (size)
+  y1 = -4.0
   for y in range(0, size):
-    x1 = -4.5
+    x1 = -4.0
     for x in range(0, size):
       frac = -1*((x1**2-sigma**2)/(2.0 * math.pi * sigma**4.0))
       exponent = (x1**2.0 + y1**2.0)/(2.0 * sigma**2.0)
@@ -62,7 +74,7 @@ def gauss2x(size, sigma):
       gauss_kernel[y][x] = gauss_calc
       x1 += stepsize
     y1 += stepsize
-  gauss_kernel = gauss_kernel / sum(sum(gauss_kernel))
+  gauss_kernel = gauss_kernel / sum(sum(abs(gauss_kernel)))
   return(gauss_kernel)
 
 def gauss2y(size, sigma):
@@ -70,9 +82,14 @@ def gauss2y(size, sigma):
   gauss_kernel = np.zeros([size, size])
   stepsize = 9.0 / size
   half = int(size/2)
-  y1 = -4.5
+  if (size > 9):
+    stepsize = 9.0 / (size + (size/9))
+  else:
+    stepsize = 9.0 / (size)
+
+  y1 = -4.0
   for y in range(0, size):
-    x1 = -4.5
+    x1 = -4.0
     for x in range(0, size):
       frac = -1*((y1**2-sigma**2)/(2.0 * math.pi * sigma**6.0))
       exponent = (x1**2.0 + y1**2.0)/(2.0 * sigma**2.0)
@@ -80,17 +97,21 @@ def gauss2y(size, sigma):
       gauss_kernel[y][x] = gauss_calc
       x1 += stepsize
     y1 += stepsize
-  gauss_kernel = gauss_kernel / sum(sum(gauss_kernel))
+  gauss_kernel = gauss_kernel / sum(sum(np.abs(gauss_kernel)))
   return(gauss_kernel)
 
 def gauss2xy(size, sigma):
   D = np.zeros([size, size])
   gauss_kernel = np.zeros([size, size])
-  stepsize = 9.0 / size
+  if (size > 9):
+    stepsize = 9.0 / (size + (size/9))
+  else:
+    stepsize = 9.0 / (size)
+
   half = int(size/2)
-  y1 = -4.5
+  y1 = -4
   for y in range(0, size):
-    x1 = -4.5
+    x1 = -4
     for x in range(0, size):
       first = ((x1*y1)/2.0*math.pi**6.0)
       second = math.exp(-((x1**2.0+y1**2.0)/(2.0*sigma**2.0)))
@@ -98,8 +119,7 @@ def gauss2xy(size, sigma):
       gauss_kernel[y][x] = gauss_calc
       x1 += stepsize
     y1 += stepsize
-  gauss_kernel = gauss_kernel / sum(sum(gauss_kernel))
-  print sum(sum(gauss_kernel))
+  gauss_kernel = gauss_kernel / sum(sum(np.abs(gauss_kernel)))
   return(gauss_kernel)
 
 
@@ -362,3 +382,5 @@ def advanced_oneNN(descss1, descss2, pp1, pp2):
       new_res_p2.append(res_p2[point1])
 
   return(new_res_p1, new_res_p2)
+
+np.set_printoptions(precision=2)
