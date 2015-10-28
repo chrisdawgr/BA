@@ -275,6 +275,7 @@ def drawMatches(I1, kp1, I2, kp2, matches):
 
   # Show the image
   cv2.imshow('Matched Features', out)
+  cv2.imwrite(str(I2) + "-advanced-matching.jpg", out)
   cv2.waitKey(0)
   cv2.destroyWindow('Matched Features')
 
@@ -346,7 +347,7 @@ def advanced_oneNN(descss1, descss2, pp1, pp2):
     for point2 in range(0, len(pp2)):
       if (np.all(descss2[point2] != res_des2[point1])):
         dist = np.linalg.norm(res_des1[point1] - descss2[point2])
-        print(dist, fst_shortest_dist)
+        #print(dist, fst_shortest_dist)
         if (scn_shortest_dist > dist):
           scn_shortest_dist = dist
           scn_shortest_index = point2
@@ -354,7 +355,7 @@ def advanced_oneNN(descss1, descss2, pp1, pp2):
       #else:
       #  print(point2, "these are identical")
 
-    if (fst_shortest_dist / scn_shortest_dist < 0.8):
+    if (fst_shortest_dist / scn_shortest_dist < 0.3):
       #print(fst_shortest_dist, scn_shortest_dist)
       new_res_p1.append(res_p1[point1])
       new_res_p2.append(res_p2[point1])
