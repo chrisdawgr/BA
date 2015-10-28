@@ -99,6 +99,7 @@ def gauss2xy(size, sigma):
       x1 += stepsize
     y1 += stepsize
   gauss_kernel = gauss_kernel / sum(sum(gauss_kernel))
+  print sum(sum(gauss_kernel))
   return(gauss_kernel)
 
 
