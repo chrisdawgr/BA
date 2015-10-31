@@ -38,6 +38,7 @@ def find_max_new(scale,i,y,x,):
     return 1
 
 def accurate_keypoint(point,deriv1, deriv2, deriv3):
+  point = ((point)/255.0)
   # deriv [dxx,dyy,dxy,dx,dy,gauss]
   Dxx = deriv2[0] *1.0 /255
   Dyy = deriv2[1] *1.0 / 255 
@@ -46,30 +47,31 @@ def accurate_keypoint(point,deriv1, deriv2, deriv3):
   Dxs = (deriv3[3]-deriv1[3])*0.25/255 #0.5 This value is much larger
   Dys = (deriv3[4]-deriv1[4])*0.25/255 #0.5 This value is much more negative
   Dss = (deriv3[5]-deriv1[5]) * 1/255 # this value is 0
-  #print (Dss)
   Dx = deriv2[3] * 0.5/255  # 0.5
   Dy = deriv2[4] * 0.5/255  # 0.5
   Ds = deriv2[5] * 0.5/255 # 0.5 # is zero
-  #H = numpy.matrix([[Dxx, Dxy, Dxs], [Dxy, Dyy, Dys], [Dxs, Dys, Dss]])
+  #print ("dxx:",Dxx,"dyy",Dyy,"dxy",Dxy,"dx",Dx,"\n", "dxs",Dxs,"dys",Dys,"dss",Dss,"ds",Ds)
+  H1 = numpy.matrix([[Dxx, Dxy, Dxs], [Dxy, Dyy, Dys], [Dxs, Dys, Dss]])
   #print (H)
   H = numpy.matrix([[Dxx, Dxy], [Dxy, Dyy]])
   det = float(numpy.linalg.det(H))
-  #DX = numpy.matrix([[Dx], [Dy], [Ds]])
+  DX1 = numpy.matrix([[Dx], [Dy], [Ds]])
   DX = numpy.matrix([[Dx], [Dy]])
-  #print (Dxy)
-  #print (det)
   if det != 0:
     xhat = numpy.linalg.inv(H) * DX
-    #print ("xhat:",xhat[0],"\t",xhat[1]) 
-    #print (xhat)
-    if (abs(xhat[0]) < 0.5 and abs(xhat[1]) < 0.5):# and abs(xhat[2]) < 7):# way too low
+    xhat1 = numpy.linalg.inv(H1) * DX1
+    #print ("xhat:",xhat[1],"\n","xhat1",xhat1[2]) 
+    if (abs(xhat1[0]) < 0.5 and abs(xhat1[1]) < 0.5):# and abs(xhat1[2]) < 0.5):# way too low
+      #print ("passed xhat")
       #print (abs(xhat[0]))
       Dxhat = ((1/2.0) * DX.transpose() * xhat) #  This is way too big. Missing point
+      Dxhat1 = ((1/2.0) * DX1.transpose() * xhat1)
+      #print ("DXhat:",Dxhat,"\n","dxhat1",Dxhat1) 
       #print (10*(abs(Dxhat[0])))
-      if(abs(Dxhat)*30) > (0.03):
-        print ("passed dxhat")
+      if(abs(Dxhat1)*30) > (0.03):
+        #print ("passed dxhat")
         return 1
-      print ("rejected dxhat")
+      #print ("rejected dxhat")
     #print ("rejected xhat")
     return 0
   return 0
@@ -147,7 +149,6 @@ def findSurfPoints(filename):
   o1 = numpy.zeros((I_bw.shape[0],I_bw.shape[1],4))
   o2 = numpy.zeros((I_bw.shape[0],I_bw.shape[1],4))
   o3 = numpy.zeros((I_bw.shape[0],I_bw.shape[1],4))
-  o4 = numpy.zeros((I_bw.shape[0],I_bw.shape[1],4))
 
   # Calculate determinant for each octave
   for y in range(10,I_bw.shape[0]-10):
@@ -157,10 +158,22 @@ def findSurfPoints(filename):
       o1[y,x,2] = conv21[y,x,0]*conv21[y,x,1]-((0.9*conv21[y,x,2])**2)
       o1[y,x,3] = conv27[y,x,0]*conv27[y,x,1]-((0.9*conv27[y,x,2])**2)
 
+      o2[y,x,0] = conv15[y,x,0]*conv9[y,x,1]-((0.9*conv9[y,x,2])**2)
+      o2[y,x,1] = conv27[y,x,0]*conv15[y,x,1]-((0.9*conv15[y,x,2])**2)
+      o2[y,x,2] = conv39[y,x,0]*conv21[y,x,1]-((0.9*conv21[y,x,2])**2)
+      o2[y,x,3] = conv51[y,x,0]*conv27[y,x,1]-((0.9*conv27[y,x,2])**2)
+
+      o3[y,x,0] = conv27[y,x,0]*conv9[y,x,1]-((0.9*conv9[y,x,2])**2)
+      o3[y,x,1] = conv51[y,x,0]*conv15[y,x,1]-((0.9*conv15[y,x,2])**2)
+      o3[y,x,2] = conv75[y,x,0]*conv21[y,x,1]-((0.9*conv21[y,x,2])**2)
+      o3[y,x,3] = conv99[y,x,0]*conv27[y,x,1]-((0.9*conv27[y,x,2])**2)
+
   extrema_points_1_1 = []
   extrema_points_1_2 = []
-  #extrema_points_2 = []
-  #extrema_points_3 = []
+  extrema_points_2_1 = []
+  extrema_points_2_2 = []
+  extrema_points_3_1 = []
+  extrema_points_3_2 = []
   #extrema_points_4 = [] 
   #print(clear,"\r", end="")
 
@@ -174,34 +187,56 @@ def findSurfPoints(filename):
     for x in range(0,I_bw.shape[1]):
       Flag = False
       if find_max_new(o1,1,y,x) == 1:
-        passedmax += 1
         if (accurate_keypoint(o1[y,x,1],conv9[y,x,:],conv15[y,x,:],conv21[y,x,:]) == 1):
-          passeddxhat += 1
-          extrema_points_1_1.append([y,x,(9/9*1.2)])
+          extrema_points_1_1.append([y,x,(15/9*1.2)])
         rejectedxhat += 1
         Flag = True
       if Flag == False and find_max_new(o1,2,y,x) == 1:
-        passedmax1 += 1
-        if (accurate_keypoint(o1[y,x,2],conv9[y,x,:],conv15[y,x,:],conv21[y,x,:]) == 1):
-          passeddxhat1 += 1
-          extrema_points_1_2.append([y,x,(15/9*1.2)])
-        rejectedxhat1 += 1
-  print ("number of passed by dxhat:",passeddxhat, "of",passedmax)
-  print (passeddxhat)
-  print ("number of passed dxhat:",passeddxhat1, "of",passedmax1)
-  print ("total number of rejected by accurate_keypoint",((passedmax+passedmax1)-passeddxhat+passeddxhat1))
+        if (accurate_keypoint(o1[y,x,2],conv15[y,x,:],conv21[y,x,:],conv27[y,x,:]) == 1):
+          extrema_points_1_2.append([y,x,(21/9*1.2)])
   dogn1 =  numpy.array(extrema_points_1_1)
   dogn2 = numpy.array(extrema_points_1_2)
   if (len(dogn1) > 1) and (len(dogn2)>1):
     result = numpy.vstack([dogn1, dogn2])
-    print ("Number of points in first octave: %d" % len(result))
-    h.points_to_txt_3_points(result, "SURF_interest_points_o1.txt", "\n")
-    h.color_pic(I, result, filename[:-4] + "Surfo1" + ".jpg")
+  print ("Number of points in first octave: %d" % len(result))
 
-            
-findSurfPoints("erimitage2.jpg")
+  
+  for y in range(0,I_bw.shape[0]):
+    for x in range(0,I_bw.shape[1]):
+      Flag = False
+      if find_max_new(o2,1,y,x) == 1:
+        if (accurate_keypoint(o2[y,x,1],conv15[y,x,:],conv27[y,x,:],conv39[y,x,:]) == 1):
+          extrema_points_2_1.append([y,x,(27/9*1.2)])
+        Flag = True
+      if Flag == False and find_max_new(o2,2,y,x) == 1:
+        if (accurate_keypoint(o2[y,x,2],conv27[y,x,:],conv39[y,x,:],conv51[y,x,:]) == 1):
+          extrema_points_2_2.append([y,x,(39/9*1.2)])
+  dogn3 =  numpy.array(extrema_points_2_1)
+  dogn4 = numpy.array(extrema_points_2_2)
+  if (len(dogn3) > 1) and (len(dogn4)>1):
+    result1 = numpy.vstack([dogn3, dogn4])
+    print ("Number of points in second octave: %d" % len(result1))
 
+  for y in range(0,I_bw.shape[0]):
+    for x in range(0,I_bw.shape[1]):
+      Flag = False
+      if find_max_new(o3,1,y,x) == 1:
+        if (accurate_keypoint(o3[y,x,1],conv27[y,x,:],conv51[y,x,:],conv75[y,x,:]) == 1):
+          extrema_points_3_1.append([y,x,(51/9*1.2)])
+        Flag = True
+      if Flag == False and find_max_new(o3,2,y,x) == 1:
+        if (accurate_keypoint(o3[y,x,2],conv51[y,x,:],conv75[y,x,:],conv99[y,x,:]) == 1):
+          extrema_points_3_2.append([y,x,(75/9*1.2)])
+  dogn5 =  numpy.array(extrema_points_3_1)
+  dogn6 = numpy.array(extrema_points_3_2)
+  if (len(dogn5) == 0):
+    dogn5 =[0,0,0]
+  if (len(dogn6) == 0):
+    dogn6 = [0,0,0]
+  result2 = numpy.vstack([dogn5, dogn6])
+  print ("Number of points in thrid octave: %d" % len(result2))
+  alloctaves = numpy.vstack([result,result1,result2]) 
+  h.points_to_txt_3_points(alloctaves, "surfallpoints.txt", "\n")
+  return alloctaves 
 
-"""
-
-"""
+print (findSurfPoints("erimitage2.jpg"))
