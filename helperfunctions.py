@@ -253,6 +253,7 @@ def drawMatches(I1, kp1, I2, kp2, matches):
   matches - A list of matches of corresponding keypoints through any
             OpenCV keypoint matching algorithm
   """
+  print("drawing matches")
   img1 = cv2.imread(I1, 0)
   img2 = cv2.imread(I2, 0)
 
@@ -304,6 +305,7 @@ def drawMatches(I1, kp1, I2, kp2, matches):
   return out
 
 def oneNN(descss1, descss2, pp1, pp2):
+  print("calculating oneNN")
   print(len(descss1), len(pp1))
   print(len(descss2), len(pp2))
   res_1 = []
@@ -350,11 +352,11 @@ def oneNN(descss1, descss2, pp1, pp2):
   if(ret_flag == 0):
     return(res_1, res_2, res_d_1, res_d_2)
   else:
-    print("heer")
     return(res_2, res_1, res_d_2, res_d_1)
 
 
 def advanced_oneNN(descss1, descss2, pp1, pp2):
+  print("calculating advanced oneNN")
   (res_p1, res_p2, res_des1, res_des2) = oneNN(descss1, descss2, pp1, pp2)
   new_res_p1 = []
   new_res_p2 = []
