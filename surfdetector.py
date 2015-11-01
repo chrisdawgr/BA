@@ -1,5 +1,3 @@
-from __future__ import print_function
-from __future__ import division
 import scipy
 import numpy
 import scipy.ndimage
@@ -39,23 +37,23 @@ def find_max_new(scale,i,y,x,):
 
 def accurate_keypoint(point,deriv1, deriv2, deriv3):
   # deriv [dxx,dyy,dxy,dx,dy,gauss]
-  Dxx = deriv2[0] *1.0 /255
-  Dyy = deriv2[1] *1.0 / 255 
+  Dxx = deriv2[0] * 0.25 /255
+  Dyy = deriv2[1] * 0.25/ 255 
   Dxy = deriv2[2] * 0.25 /255 #this value is much larger WRONG
   #print (Dxx)
-  Dxs = (deriv3[3]-deriv1[3])*0.25/255 #0.5 This value is much larger
-  Dys = (deriv3[4]-deriv1[4])*0.25/255 #0.5 This value is much more negative
-  Dss = (deriv3[5]-deriv1[5]) * 1/255 # this value is 0
+  Dxs = (deriv3[3]-deriv1[3])*0.5/255 #0.5 This value is much larger
+  Dys = (deriv3[4]-deriv1[4])*0.5/255 #0.5 This value is much more negative
+  Dss = (-2 * deriv2[5] + deriv3[5] + deriv1[5]) * 0.25/255 # this value is 0
   #print (Dss)
   Dx = deriv2[3] * 0.5/255  # 0.5
   Dy = deriv2[4] * 0.5/255  # 0.5
-  Ds = deriv2[5] * 0.5/255 # 0.5 # is zero
+  Ds = (deriv3[5] - deriv1[5]) * 0.5/255 # 0.5 # is zero
   #H = numpy.matrix([[Dxx, Dxy, Dxs], [Dxy, Dyy, Dys], [Dxs, Dys, Dss]])
   #print (H)
-  H = numpy.matrix([[Dxx, Dxy], [Dxy, Dyy]])
+  H = numpy.matrix([[Dxx, Dxy, Dxs], [Dxy, Dyy, Dys], [Dxs, Dys, Dss]])
   det = float(numpy.linalg.det(H))
   #DX = numpy.matrix([[Dx], [Dy], [Ds]])
-  DX = numpy.matrix([[Dx], [Dy]])
+  DX = numpy.matrix([[Dx], [Dy], [Ds]])
   #print (Dxy)
   #print (det)
   if det != 0:
@@ -64,15 +62,17 @@ def accurate_keypoint(point,deriv1, deriv2, deriv3):
     #print (xhat)
     if (abs(xhat[0]) < 0.5 and abs(xhat[1]) < 0.5):# and abs(xhat[2]) < 7):# way too low
       #print (abs(xhat[0]))
-      Dxhat = ((1/2.0) * DX.transpose() * xhat) #  This is way too big. Missing point
+      Dxhat = (point + (1/2.0) * DX.transpose() * xhat) #  This is way too big. Missing point
+      print(Dxhat)
       #print (10*(abs(Dxhat[0])))
-      if(abs(Dxhat)*30) > (0.03):
-        print ("passed dxhat")
+      if(abs(Dxhat) > 1.03):
+        #print ("passed dxhat")
         return 1
-      print ("rejected dxhat")
+      #print ("rejected dxhat")
     #print ("rejected xhat")
     return 0
   return 0
+
 def getGauss(size,i):
   sigma = 1.2
   if i == 0:
@@ -82,11 +82,11 @@ def getGauss(size,i):
   if i == 2:
     return h.gauss2xy(size,sigma)
   if i == 3:
-    return h.gaussdx(size,sigma)
+    return h.gaussdx(size,sigma/3)
   if i == 4:
-    return h.gaussdy(size,sigma)
+    return h.gaussdy(size,sigma/3)
   if i == 5:
-    return h.gauss(size,sigma)
+    return h.gauss(size,sigma/3)
 
 def findSurfPoints(filename):
   clear = " " * 50
@@ -112,6 +112,7 @@ def findSurfPoints(filename):
     filter21[:,:,i] = getGauss(21,i)
     filter27[:,:,i] = getGauss(27,i)
     filter39[:,:,i] = getGauss(39,i)
+    filter51[:,:,i] = getGauss(51,i)
     filter75[:,:,i] = getGauss(75,i)
     filter99[:,:,i] = getGauss(99,i)
   #print ("\n")
@@ -119,35 +120,35 @@ def findSurfPoints(filename):
   #print (numpy.sum(filter9[:,:,0]))
 
   # Intitialize convolved image holder
-  conv9  = numpy.zeros((I_bw.shape[0],I_bw.shape[1],6))
-  conv15 = numpy.zeros((I_bw.shape[0],I_bw.shape[1],6))
-  conv21 = numpy.zeros((I_bw.shape[0],I_bw.shape[1],6))
-  conv27 = numpy.zeros((I_bw.shape[0],I_bw.shape[1],6))
-  conv39 = numpy.zeros((I_bw.shape[0],I_bw.shape[1],6))
-  conv51 = numpy.zeros((I_bw.shape[0],I_bw.shape[1],6))
-  conv75 = numpy.zeros((I_bw.shape[0],I_bw.shape[1],6))
-  conv99 = numpy.zeros((I_bw.shape[0],I_bw.shape[1],6))
+  conv9  = numpy.zeros((I_bw.shape[0], I_bw.shape[1],6))
+  conv15 = numpy.zeros((I_bw.shape[0], I_bw.shape[1],6))
+  conv21 = numpy.zeros((I_bw.shape[0], I_bw.shape[1],6))
+  conv27 = numpy.zeros((I_bw.shape[0], I_bw.shape[1],6))
+  conv39 = numpy.zeros((I_bw.shape[0], I_bw.shape[1],6))
+  conv51 = numpy.zeros((I_bw.shape[0], I_bw.shape[1],6))
+  conv75 = numpy.zeros((I_bw.shape[0], I_bw.shape[1],6))
+  conv99 = numpy.zeros((I_bw.shape[0], I_bw.shape[1],6))
 
-  # Each holder has the image corresponding to dxx, dyy, dxy, dx, dy, gauss
+  # Each holder has the image corresponding to dxx, dyy, dxy, dx, dy, gauss, respectively
   #print(clear,"\r", end="")
   #print("Process: Convolving image for all derivates","\r", end="")
   for i in range(0,6):
-    conv9[:,:,i]  = cv2.filter2D(I_bw,-1, filter9[:,:,i])
-    conv15[:,:,i] = cv2.filter2D(I_bw,-1, filter15[:,:,i])
-    conv21[:,:,i] = cv2.filter2D(I_bw,-1, filter21[:,:,i])
-    conv27[:,:,i] = cv2.filter2D(I_bw,-1, filter27[:,:,i])
-    conv39[:,:,i] = cv2.filter2D(I_bw,-1, filter39[:,:,i])
-    conv51[:,:,i] = cv2.filter2D(I_bw,-1, filter51[:,:,i])
-    conv75[:,:,i] = cv2.filter2D(I_bw,-1, filter75[:,:,i])
-    conv99[:,:,i] = cv2.filter2D(I_bw,-1, filter99[:,:,i])
+    conv9[:,:,i]  = cv2.filter2D(I_bw, -1, filter9[:,:,i])
+    conv15[:,:,i] = cv2.filter2D(I_bw, -1, filter15[:,:,i])
+    conv21[:,:,i] = cv2.filter2D(I_bw, -1, filter21[:,:,i])
+    conv27[:,:,i] = cv2.filter2D(I_bw, -1, filter27[:,:,i])
+    conv39[:,:,i] = cv2.filter2D(I_bw, -1, filter39[:,:,i])
+    conv51[:,:,i] = cv2.filter2D(I_bw, -1, filter51[:,:,i])
+    conv75[:,:,i] = cv2.filter2D(I_bw, -1, filter75[:,:,i])
+    conv99[:,:,i] = cv2.filter2D(I_bw, -1, filter99[:,:,i])
   #print (conv9[:,:,1])
   #print (conv9[:,:,2])
   
   # Initialize holders for determinants of hessian
-  o1 = numpy.zeros((I_bw.shape[0],I_bw.shape[1],4))
-  o2 = numpy.zeros((I_bw.shape[0],I_bw.shape[1],4))
-  o3 = numpy.zeros((I_bw.shape[0],I_bw.shape[1],4))
-  o4 = numpy.zeros((I_bw.shape[0],I_bw.shape[1],4))
+  o1 = numpy.zeros((I_bw.shape[0], I_bw.shape[1],4))
+  o2 = numpy.zeros((I_bw.shape[0], I_bw.shape[1],4))
+  o3 = numpy.zeros((I_bw.shape[0], I_bw.shape[1],4))
+  o4 = numpy.zeros((I_bw.shape[0], I_bw.shape[1],4))
 
   # Calculate determinant for each octave
   for y in range(10,I_bw.shape[0]-10):
@@ -199,7 +200,7 @@ def findSurfPoints(filename):
     h.color_pic(I, result, filename[:-4] + "Surfo1" + ".jpg")
 
             
-findSurfPoints("erimitage2.jpg")
+#findSurfPoints("erimitage2.jpg")
 
 
 """
