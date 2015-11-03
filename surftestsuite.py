@@ -18,6 +18,6 @@ def surf_tester(pic1, pic2):
 
   (sp1, sp2) = h.advanced_oneNN(desc1, desc2, po1, po2)
 
-  h.drawMatches(pic1, sp1, pic2, sp2, [])
+  h.drawMatches(pic1, sp1[20:40], pic2, sp2[20:40], [])
 
-surf_tester("mark-seg1.jpg", "mark-seg2.jpg")
+surf_tester("mark-seg-2-1.jpg", "mark-seg-2-2.jpg")
