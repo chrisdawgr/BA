@@ -181,11 +181,16 @@ def findSurfPoints(filename):
       if find_max_new(o1,1,y,x) == 1:
         if (accurate_keypoint(I_bw[y,x],conv9[:,y,x],conv15[:,y,x],conv21[:,y,x], 0.5) == 1):
           extrema_points_1_1.append([y,x,(15/9*1.2)])
+          #I[y,x] = (0,0,255)
+          cv2.circle(I,(x,y), 3, (0,0,255), -1)
         rejectedxhat += 1
         Flag = True
       if Flag == False and find_max_new(o1,2,y,x) == 1:
         if (accurate_keypoint(I_bw[y,x],conv15[:,y,x],conv21[:,y,x],conv27[:,y,x], 0.5) == 1):
           extrema_points_1_2.append([y,x,(21/9*1.2)])
+          #I[y,x] = (0,0,255)
+          cv2.circle(I,(x,y), 5, (0,0,155), -1)
+
   dogn1 = numpy.array(extrema_points_1_1)
   dogn2 = numpy.array(extrema_points_1_2)
   if (len(dogn1) > 0) and (len(dogn2)>0):
@@ -202,10 +207,15 @@ def findSurfPoints(filename):
       if find_max_new(o2,1,y,x) == 1:
         if (accurate_keypoint(I_bw[y,x],conv15[:,y,x],conv27[:,y,x],conv39[:,y,x], 0.5) == 1):
           extrema_points_2_1.append([y,x,(27/9*1.2)])
+          #I[y,x] = (0,0,255)
+          cv2.circle(I,(x,y), 5, (0,255,0), 2)
+
         Flag = True
       if Flag == False and find_max_new(o2,2,y,x) == 1:
         if (accurate_keypoint(I_bw[y,x],conv27[:,y,x],conv39[:,y,x],conv51[:,y,x], 0.5) == 1):
           extrema_points_2_2.append([y,x,(39/9*1.2)])
+          #I[y,x] = (0,0,255)
+          cv2.circle(I,(x,y), 5, (0,155,0), 2)
   dogn3 =  numpy.array(extrema_points_2_1)
   dogn4 = numpy.array(extrema_points_2_2)
   if (len(dogn3) > 1) and (len(dogn4)>1):
@@ -217,11 +227,16 @@ def findSurfPoints(filename):
       Flag = False
       if find_max_new(o3,1,y,x) == 1:
         if (accurate_keypoint(I_bw[y,x],conv27[:,y,x],conv51[:,y,x],conv75[:,y,x], 0.5) == 1):
+          #I[y,x] = (255,0,0)
+          cv2.circle(I,(x,y), 7, (255,0,0), 2)
           extrema_points_3_1.append([y,x,(51/9*1.2)])
         Flag = True
       if Flag == False and find_max_new(o3,2,y,x) == 1:
         if (accurate_keypoint(I_bw[y,x],conv51[:,y,x],conv75[:,y,x],conv99[:,y,x], 0.5) == 1):
+          #I[y,x] = (0,0,255)
+          cv2.circle(I,(x,y), 7, (155,0,0), 2)
           extrema_points_3_2.append([y,x,(75/9*1.2)])
+
   dogn5 =  numpy.array(extrema_points_3_1)
   dogn6 = numpy.array(extrema_points_3_2)
   if (len(dogn5) == 0):
@@ -231,7 +246,13 @@ def findSurfPoints(filename):
   result2 = numpy.vstack([dogn5, dogn6])
   print ("Number of points in thrid octave: %d" % len(result2))
   alloctaves = numpy.vstack([result,result1,result2]) 
+  #III = cv2.imread(filename)
+  #coordin = (numpy.array([alloctaves[:,1], alloctaves[:,0]]).astype(int)).T
+  #III[coordin] = (0,0,255)
+  #cv2.imwrite(str(filename)[:-4] + "-surfdet" + ".jpg", III)
+  cv2.imwrite("xx" + str(filename)[:-4] + ".jpg", I)
   h.points_to_txt_3_points(alloctaves, "surfallpoints.txt", "\n")
+  print("pic written")
   return alloctaves 
 
 """

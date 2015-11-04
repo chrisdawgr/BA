@@ -69,8 +69,8 @@ def surf_descriptor(I_name, keypoints):
     max_size_y = len(I_bw) - 10
     min_size_x = min_size_y = 20 * p[2] - hs
     max_size_x = len(I_bw[0])
-    if ((round_four(20 * p[2] + p[0] + hs * 20 + 2) < max_size_y) and (min_size_y < p[0]  ) and \
-        (round_four(20 * p[2] + p[1] + hs * 20 + 2) < max_size_x) and (min_size_x < p[1]  )):
+    if ((round_four(20 * p[2] + p[1] + hs * 20 + 2) < max_size_y) and (min_size_y < p[1]  ) and \
+        (round_four(20 * p[2] + p[0] + hs * 20 + 2) < max_size_x) and (min_size_x < p[0]  )):
       keypoints_area.append([p[0], p[1], p[2]])
       final_keypoints.append([p[0], p[1]])
   
