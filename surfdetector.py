@@ -180,14 +180,14 @@ def findSurfPoints(filename):
       Flag = False
       if find_max_new(o1,1,y,x) == 1:
         if (accurate_keypoint(I_bw[y,x],conv9[:,y,x],conv15[:,y,x],conv21[:,y,x], 0.5) == 1):
-          extrema_points_1_1.append([y,x,(15/9*1.2)])
+          extrema_points_1_1.append([y,x,(2.0)])
           #I[y,x] = (0,0,255)
           cv2.circle(I,(x,y), 3, (0,0,255), -1)
         rejectedxhat += 1
         Flag = True
       if Flag == False and find_max_new(o1,2,y,x) == 1:
         if (accurate_keypoint(I_bw[y,x],conv15[:,y,x],conv21[:,y,x],conv27[:,y,x], 0.5) == 1):
-          extrema_points_1_2.append([y,x,(21/9*1.2)])
+          extrema_points_1_2.append([y,x,(2.8)])
           #I[y,x] = (0,0,255)
           cv2.circle(I,(x,y), 5, (0,0,155), -1)
 
@@ -206,14 +206,14 @@ def findSurfPoints(filename):
       Flag = False
       if find_max_new(o2,1,y,x) == 1:
         if (accurate_keypoint(I_bw[y,x],conv15[:,y,x],conv27[:,y,x],conv39[:,y,x], 0.5) == 1):
-          extrema_points_2_1.append([y,x,(27/9*1.2)])
+          extrema_points_2_1.append([y,x,(3.6)])
           #I[y,x] = (0,0,255)
           cv2.circle(I,(x,y), 5, (0,255,0), 2)
 
         Flag = True
       if Flag == False and find_max_new(o2,2,y,x) == 1:
         if (accurate_keypoint(I_bw[y,x],conv27[:,y,x],conv39[:,y,x],conv51[:,y,x], 0.5) == 1):
-          extrema_points_2_2.append([y,x,(39/9*1.2)])
+          extrema_points_2_2.append([y,x,(5.2)])
           #I[y,x] = (0,0,255)
           cv2.circle(I,(x,y), 5, (0,155,0), 2)
   dogn3 =  numpy.array(extrema_points_2_1)
@@ -229,13 +229,13 @@ def findSurfPoints(filename):
         if (accurate_keypoint(I_bw[y,x],conv27[:,y,x],conv51[:,y,x],conv75[:,y,x], 0.5) == 1):
           #I[y,x] = (255,0,0)
           cv2.circle(I,(x,y), 7, (255,0,0), 2)
-          extrema_points_3_1.append([y,x,(51/9*1.2)])
+          extrema_points_3_1.append([y,x,(6.8)])
         Flag = True
       if Flag == False and find_max_new(o3,2,y,x) == 1:
         if (accurate_keypoint(I_bw[y,x],conv51[:,y,x],conv75[:,y,x],conv99[:,y,x], 0.5) == 1):
           #I[y,x] = (0,0,255)
           cv2.circle(I,(x,y), 7, (155,0,0), 2)
-          extrema_points_3_2.append([y,x,(75/9*1.2)])
+          extrema_points_3_2.append([y,x,(10.0)])
 
   dogn5 =  numpy.array(extrema_points_3_1)
   dogn6 = numpy.array(extrema_points_3_2)

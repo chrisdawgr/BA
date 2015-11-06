@@ -1,5 +1,6 @@
 import cv2
 import math
+import random
 import numpy as np
 
 def gauss(size, sigma):
@@ -279,80 +280,146 @@ def drawMatches(I1, kp1, I2, kp2, matches):
     # Get the matching keypoints for each of the images
     # x - columns
     # y - rows
-    (x1,y1) = (kp1[mat])
-    (x2,y2) = (kp2[mat])
+    (y1,x1,_) = (kp1[mat])
+    (y2,x2,_) = (kp2[mat])
 
     # Draw a small circle at both co-ordinates
     # radius 4
     # colour blue
     # thickness = 1
-    cv2.circle(out, (int(y1),int(x1)), 4, (255, 0, 0), 1)   
-    cv2.circle(out, (int(y2)+cols1,int(x2)), 4, (255, 0, 0), 1)
+    cv2.circle(out, (int(x1),int(y1)), 4, (255, 0, 0), 1)   
+    cv2.circle(out, (int(x2)+cols1,int(y2)), 4, (255, 0, 0), 1)
 
     # Draw a line in between the two points
     # thickness = 1
     # colour blue
-    cv2.line(out, (int(y1),int(x1)), (int(y2)+cols1,int(x2)), (255, 0, 0), 1)
+    cv2.line(out, (int(x1),int(y1)), (int(x2)+cols1,int(y2)), (255, 0, 0), 1)
 
 
   # Show the image
   cv2.imshow('Matched Features', out)
-  cv2.imwrite(str(I2) + "-advanced-matching.jpg", out)
+  cv2.imwrite(str(I1) + "-advanced-matching.jpg", out)
   cv2.waitKey(0)
   cv2.destroyWindow('Matched Features')
 
   # Also return the image if you'd like a copy
   return out
 
-def oneNN(descss1, descss2, pp1, pp2):
+def oneNN(descs1, descs2, p1, p2):
   print("calculating oneNN")
-  print(len(descss1), len(pp1))
-  print(len(descss2), len(pp2))
+  print(len(descs1), len(p1))
+  print(len(descs2), len(p2))
+
   res_1 = []
   res_2 = []
   res_d_1 = []
   res_d_2 = []
-  p1 = []
-  p2 = []
-  descs1 = []
-  descs1 = []
-  ret_flag = 0
-
-  if(len(pp1) < len(pp2)):
-    p1 = pp1
-    p2 = pp2
-    descs1 = descss1
-    descs2 = descss2
-
-  else:
-    p1 = pp2
-    p2 = pp1
-    descs1 = descss2
-    descs2 = descss1
-    ret_flag = 1
+  descs1 = np.array(descs1)
+  descs2 = np.array(descs2)
 
   for i_desc1 in range(0, len(descs1)):
-    desc1 = np.matrix(descs1[i_desc1])
+    desc1 = descs1[i_desc1]
     s_dist = float("inf")
-    s_dist_index2 = 0
+    s_dist_index = 0
     for i_desc2 in range(0, len(descs2)):
-      desc2 = np.matrix(descs2[i_desc2])
-      dist = np.linalg.norm(desc1 - desc2)
+      desc2 = descs2[i_desc2]
+      dist = np.linalg.norm(desc2 - desc1)
 
       if (dist < s_dist):
         s_dist = dist
-        s_dist_index2 = i_desc2
+        s_dist_index = i_desc2
 
     res_1.append(p1[i_desc1])
-    res_2.append(p2[s_dist_index2])
-    res_d_1.append(descs1[i_desc1])
-    res_d_2.append(descs2[s_dist_index2])
-    #print(s_dist_index2)
+    res_d_1.append(desc1)
+    res_2.append(p2[s_dist_index])
+    res_d_2.append(descs2[s_dist_index])
 
-  if(ret_flag == 0):
-    return(res_1, res_2, res_d_1, res_d_2)
-  else:
-    return(res_2, res_1, res_d_2, res_d_1)
+  """
+  I = cv2.imread("room10.jpg")
+  I2 = cv2.imread("room11.jpg")
+  for fin in range(0, len(res_1)):
+    I[res_1[fin][0], res_1[fin][1]] = (0,0,255)
+    I2[res_2[fin][0], res_2[fin][1]] = (0,0,255)
+    cv2.circle(I, (res_1[fin][1].astype(int), res_1[fin][0].astype(int)), 10, (0,255,0), 3)
+    cv2.circle(I2, (res_2[fin][1].astype(int), res_2[fin][0].astype(int)), 10, (0,255,0), 3)
+
+  cv2.imwrite("zzonenn" + "room10" + ".jpg", I)
+  cv2.imwrite("zzonenn" + "room11" + ".jpg", I2)
+
+  """
+  #res_1 = np.array(res_1)
+  #res_2 = np.array(res_2)
+  #res_d_1 = np.array(res_d_1)
+  #res_d_2 = np.array(res_d_2)
+  return(res_1, res_2, res_d_1, res_d_2)
+
+
+def oneNN_wdist(descs1, descs2, p1, p2):
+  print("calculating oneNN sorted after euclidean distance")
+  print(len(descs1), len(p1))
+  print(len(descs2), len(p2))
+
+  res_1 = []
+  res_2 = []
+  res_d_1 = []
+  res_d_2 = []
+  res_d_d = []
+  descs1 = np.array(descs1)
+  descs2 = np.array(descs2)
+
+  for i_desc1 in range(0, len(descs1)):
+    desc1 = descs1[i_desc1]
+    s_dist = float("inf")
+    s_dist_index = 0
+    for i_desc2 in range(0, len(descs2)):
+      desc2 = descs2[i_desc2]
+      dist = np.linalg.norm(desc2 - desc1)
+
+      if (dist < s_dist):
+        s_dist = dist
+        s_dist_index = i_desc2
+
+    res_1.append(p1[i_desc1])
+    res_d_1.append(desc1)
+    res_2.append(p2[s_dist_index])
+    res_d_2.append(descs2[s_dist_index])
+    res_d_d.append(s_dist)
+
+  res_d_d_np = np.array(res_d_d)
+  res_1_np = np.array(res_1)
+  res_2_np = np.array(res_2)
+  res_d_1_np = np.array(res_d_1)
+  res_d_2_np = np.array(res_d_2)
+  index = np.argsort(res_d_d_np)
+  print(res_d_d_np[index])
+  return(res_1_np[index], res_2_np[index], res_d_1_np[index], res_d_2_np[index])
+
+  """
+  I = cv2.imread("room10.jpg")
+  I2 = cv2.imread("room11.jpg")
+  for fin in range(0, len(res_1)):
+    I[res_1[fin][0], res_1[fin][1]] = (0,0,255)
+    I2[res_2[fin][0], res_2[fin][1]] = (0,0,255)
+    cv2.circle(I, (res_1[fin][1].astype(int), res_1[fin][0].astype(int)), 10, (0,255,0), 3)
+    cv2.circle(I2, (res_2[fin][1].astype(int), res_2[fin][0].astype(int)), 10, (0,255,0), 3)
+
+  cv2.imwrite("zzonenn" + "room10" + ".jpg", I)
+  cv2.imwrite("zzonenn" + "room11" + ".jpg", I2)
+
+  """
+  return(res_1, res_2, res_d_1, res_d_2)
+
+
+"""
+def cut_img(I_name, quadrant):
+  img = cv2.imread(I_name)
+  (col, row, _) = np.shape(img)
+  if (quadrant == 1)
+  img = img[0:col/2][
+"""
+  
+
+
 
 
 def advanced_oneNN(descss1, descss2, pp1, pp2):
@@ -360,6 +427,7 @@ def advanced_oneNN(descss1, descss2, pp1, pp2):
   (res_p1, res_p2, res_des1, res_des2) = oneNN(descss1, descss2, pp1, pp2)
   new_res_p1 = []
   new_res_p2 = []
+
 
   for point1 in range(0, len(res_p1)):
     fst_shortest_index = point1
@@ -378,11 +446,21 @@ def advanced_oneNN(descss1, descss2, pp1, pp2):
       #else:
       #  print(point2, "these are identical")
 
-    if (fst_shortest_dist / scn_shortest_dist < 0.3):
-      #print(fst_shortest_dist, scn_shortest_dist)
+    if (fst_shortest_dist / scn_shortest_dist > 0.2):
+      #print(fst_shortest_dist/ scn_shortest_dist)
       new_res_p1.append(res_p1[point1])
       new_res_p2.append(res_p2[point1])
 
-  return(new_res_p1, new_res_p2)
+  """
+  I = cv2.imread("mark-seg-2-1.jpg")
+  I2 = cv2.imread("mark-seg-2-2.jpg")
+  print("length of the adv_oneNN finall points ", len(new_res_p1))
+  #np.save("new_res_p1", new_res_p1)
+  #np.save("new_res_p2", new_res_p2)
 
-np.set_printoptions(precision=2)
+  cv2.imwrite("zzonennadv" + "one" + ".jpg", I)
+  cv2.imwrite("zzonennadv" + "two" + ".jpg", I2)
+  """
+
+  print("returned")
+  return(new_res_p1, new_res_p2)
