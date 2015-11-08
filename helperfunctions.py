@@ -244,6 +244,19 @@ def color_pic(*arg):
     name = arg[2]
     cv2.imwrite(name, I)
 
+def color_scale(scale1):
+    if (scale1 > 1.9 and scale1 < 2.1):
+      return (0, 0, 255)
+    if (scale1 > 2.7 and scale1 < 2.9):
+      return (0, 0, 155)
+    if (scale1 > 3.5 and scale1 < 3.6):
+      return (0, 255, 0)
+    if (scale1 > 5.1 and scale1 < 5.3):
+      return (0, 155, 0)
+    if (scale1 > 6.7 and scale1 < 6.9):
+      return (255, 0, 0)
+    if (scale1 > 9.9 and scale1 < 10.1):
+      return (155, 0, 0)
 
 
 def drawMatches(I1, kp1, I2, kp2, matches):
@@ -280,20 +293,27 @@ def drawMatches(I1, kp1, I2, kp2, matches):
     # Get the matching keypoints for each of the images
     # x - columns
     # y - rows
-    (y1,x1,_) = (kp1[mat])
-    (y2,x2,_) = (kp2[mat])
+    (y1,x1,scale1) = (kp1[mat])
+    (y2,x2,scale2) = (kp2[mat])
+
+    color1 = color_scale(scale1)
+    color2 = color_scale(scale2)
 
     # Draw a small circle at both co-ordinates
     # radius 4
     # colour blue
     # thickness = 1
-    cv2.circle(out, (int(x1),int(y1)), 4, (255, 0, 0), 1)   
-    cv2.circle(out, (int(x2)+cols1,int(y2)), 4, (255, 0, 0), 1)
+    cv2.circle(out, (int(x1),int(y1)), 2 * int(scale1), color1, 3)   
+    cv2.circle(out, (int(x2)+cols1,int(y2)), 2 * int(scale2), color2, 3)
 
     # Draw a line in between the two points
     # thickness = 1
     # colour blue
-    cv2.line(out, (int(x1),int(y1)), (int(x2)+cols1,int(y2)), (255, 0, 0), 1)
+
+    if (scale1 != scale2):
+      cv2.line(out, (int(x1),int(y1)), (int(x2)+cols1,int(y2)), (125,0,125), 3)
+    else:
+      cv2.line(out, (int(x1),int(y1)), (int(x2)+cols1,int(y2)), color1, 1)
 
 
   # Show the image
