@@ -1,4 +1,3 @@
-from __future__ import print_function
 from __future__ import division
 import math
 import cv2
@@ -52,13 +51,12 @@ def round_four(a):
     return(int(a - mod_res))
 
 
-def surf_descriptor_w_orientation(I_name, keypoints):
+def surf_descriptor(I_name, keypoints):
 
   """
-  input: [y, x, s, o], name of picture
+  input: [y, x, s], name of picture
   output: Descriptor
   """
-  progress = ['-','\\','|','/']
   I_bw = cv2.imread(I_name, 0)
   I = cv2.imread(I_name)
   I_int = cv2.integral(I_bw)
@@ -67,30 +65,22 @@ def surf_descriptor_w_orientation(I_name, keypoints):
   print("starting descriptor")
 
   # Removing keypoints if the keypoint collecting region is outside the image
-  for p_a in keypoints:
-    hs = haar_size(p_a[2])
-    max_size_y = len(I_bw) - (20 * p_a[2] + hs)
-    max_size_x = len(I_bw[0]) - (20 * p_a[2] + hs)
-    min_size_x = min_size_y = round_four(20 * p_a[2]) + hs
+  for p in keypoints:
+    hs = haar_size(p[2])
+    max_size_y = len(I_bw) - (20 * p[2] + hs)
+    max_size_x = len(I_bw[0]) - (20 * p[2] + hs)
+    min_size_x = min_size_y = round_four(20 * p[2]) + hs
     #print("maxsize y = " + str(max_size_y), "maxsize x " + str(max_size_x), "minsizex/y = " + str(min_size_y))
-    if ((p_a[0] < max_size_y) and (min_size_y < p_a[0]) and \
-        (p_a[1] < max_size_x) and (min_size_x < p_a[1])):
-      cv2.circle(I, (p_a[1].astype(int), p_a[0].astype(int)), int(round(p_a[2])), (0,0,255), 3)
-      final_keypoints.append([p_a[0], p_a[1], p_a[2], p_a[3]])
+    if ((p[0] < max_size_y) and (min_size_y < p[0]) and \
+        (p[1] < max_size_x) and (min_size_x < p[1])):
+      cv2.circle(I, (p[1].astype(int), p[0].astype(int)), int(round(p[2])), (0,0,255), 3)
+      final_keypoints.append([p[0], p[1], p[2]])
 
   cv2.imwrite("zzdes-" + I_name[:-4] + ".jpg", I)
   print("length of final_keypoints:" + str(len(final_keypoints)))
   
   #keypoint area = [y, x, s]
-  counter = 0
   for p_a in final_keypoints:
-    counter += 1
-    print(counter, "of", len(final_keypoints),"\r", end="")
-    col, row = np.shape(I_bw)
-    rotmat = cv2.getRotationMatrix2D((p_a[1], p_a[0]), p_a[3], 1)
-    dst = cv2.warpAffine(I_bw, rotmat, (int(row), int(col)))
-    I_int = cv2.integral(dst)
-
     region_size = round_four(20 * p_a[2])
     sub_region_size = region_size/4.0
     descriptor = np.zeros([64, 1])
@@ -139,8 +129,8 @@ def surf_descriptor_w_orientation(I_name, keypoints):
         x1 += incre
       y1 += incre
 
-    d_x = np.multiply(h2.gauss(len(d_x), 3.3 * p_a[2]), d_x)
-    d_y = np.multiply(h2.gauss(len(d_y), 3.3 * p_a[2]), d_y)
+    d_x = np.multiply(h2.gauss(len(d_x), 3.3 * p[2]), d_x)
+    d_y = np.multiply(h2.gauss(len(d_y), 3.3 * p[2]), d_y)
     #if ((p_a[0] == 712 and p_a[1] == 1514) or (p_a[0] == 530 and p_a[1] == 327)):
     #  np.set_printoptions(precision=5)
     #  print(d_x)
@@ -160,10 +150,98 @@ def surf_descriptor_w_orientation(I_name, keypoints):
         descriptor[i + 3] = field_abs_dy
         i += 4
 
-    keypoint_descriptor.append([p_a[:-1], descriptor / np.linalg.norm(descriptor)])
+    keypoint_descriptor.append([p_a, descriptor / np.linalg.norm(descriptor)])
 
   #print("length of keypoint descriptor: " + str(len(keypoint_descriptor)))
   #print("\n")
 
 
   return(keypoint_descriptor)
+
+
+#I = cv2.imread("erimitage2.jpg", 0)
+#points = surf_descriptor("erimitage2.jpg", p1)
+#print(points)
+   
+"""
+def fuck(p):
+
+  I_bw = [100,100]
+  filtered_points = []
+  keypoints_area = []
+  keypoint_descriptor = []
+
+  max_size_x = I_bw[0]
+  min_size_x = min_size_y = 20 * p[2]
+  max_size_y = I_bw[1]
+
+  if ((p[0] + round_four(20 * p[2]) < max_size_x) and (min_size_x < p[0] ) and \
+      (p[1] + round_four(20 * p[2]) < max_size_y) and (min_size_y < p[1] )):
+    return True
+  return False
+
+print(fuck([25,75,1.2]))
+"""
+
+
+
+"""
+def aa(a):
+  d_x_split = np.zeros([16, 4, 4])
+  i = 0
+  for y in range(0, 4):
+    for x in range(0, 4):
+      d_x_split[i, :, :] = a[y * 4: (y + 1) * 4, x * 4: (x + 1) * 4]
+      i += 1
+  return(d_x_split)
+  
+
+a = np.zeros([16,16])
+a[15, 11] = 15
+a[15, 15] = 15
+a[15, 7] = 15
+a[0, 0] = 15
+a[0, 0] = 15
+a[0, 0] = 15
+
+aa(a)
+print(aa(a))
+"""
+
+
+
+"""
+def kk(a):
+    p_a = [[50, 50], np.zeros([10,10])]
+    len_p = len(p_a[1]) / 2
+    for y in range(-len_p, len_p):
+      for x in range(-len_p, len_p):
+        p_a[1][y + len_p, x + len_p] = y + x +  p_a[0][0]
+
+    print(p_a)
+
+kk(2)
+"""
+
+"""
+print(68, round_four(68))
+print(56, round_four(56))
+print(55, round_four(55))
+print(51, round_four(51))
+print(44, round_four(41))
+"""
+
+
+
+
+"""
+    for w in range(0, 4):
+      for i in range(0, 13, 4):
+        for j in range(0, 4):
+          for k in range(0, 4):
+            mag_bin[incrementeur][v][j][k] = hold_mag[k + i + j * 16 + w * 64]
+            ori = math.floor((360 - hold_ori[k + i + j * 16 + w * 64]) / 45.0) - 1
+            #print(hold_ori[k + i + j * 16 + w * 64]) / 45.0))
+            ori_bin[incrementeur][v][j][k] = ori
+"""
+#print(haar_size(2.2))

@@ -1,7 +1,11 @@
+from __future__ import print_function
 import cv2
 import math
 import random
 import numpy as np
+import os
+import shutil
+
 
 def gauss(size, sigma):
   """
@@ -259,7 +263,7 @@ def color_scale(scale1):
       return (155, 0, 0)
 
 
-def drawMatches(I1, kp1, I2, kp2, matches):
+def drawMatches(I1, kp1, I2, kp2, matches,rot):
   """
   img1,img2 - Grayscale images
   kp1,kp2 - Detected list of keypoints through any of the OpenCV keypoint 
@@ -303,24 +307,24 @@ def drawMatches(I1, kp1, I2, kp2, matches):
     # radius 4
     # colour blue
     # thickness = 1
-    cv2.circle(out, (int(x1),int(y1)), 2 * int(scale1), color1, 3)   
-    cv2.circle(out, (int(x2)+cols1,int(y2)), 2 * int(scale2), color2, 3)
+    cv2.circle(out, (int(x1),int(y1)), 10 * int(scale1), color1, 4)   
+    cv2.circle(out, (int(x2)+cols1,int(y2)), 10 * int(scale2), color2, 4)
 
     # Draw a line in between the two points
     # thickness = 1
     # colour blue
 
     if (scale1 != scale2):
-      cv2.line(out, (int(x1),int(y1)), (int(x2)+cols1,int(y2)), (125,0,125), 3)
+      cv2.line(out, (int(x1),int(y1)), (int(x2)+cols1,int(y2)), (125,0,125), 5)
     else:
-      cv2.line(out, (int(x1),int(y1)), (int(x2)+cols1,int(y2)), color1, 1)
+      cv2.line(out, (int(x1),int(y1)), (int(x2)+cols1,int(y2)), color1, 4)
 
 
   # Show the image
-  cv2.imshow('Matched Features', out)
-  cv2.imwrite(str(I1) + "-advanced-matching.jpg", out)
-  cv2.waitKey(0)
-  cv2.destroyWindow('Matched Features')
+  #cv2.imshow('Matched Features', out)
+  cv2.imwrite(str(rot)+"-"+ str(I1) + "-advanced-matching.jpg", out)
+  #cv2.waitKey(0)
+  #cv2.destroyWindow('Matched Features')
 
   # Also return the image if you'd like a copy
   return out
@@ -376,9 +380,10 @@ def oneNN(descs1, descs2, p1, p2):
 
 def oneNN_wdist(descs1, descs2, p1, p2):
   print("calculating oneNN sorted after euclidean distance")
-  print(len(descs1), len(p1))
-  print(len(descs2), len(p2))
+  #print(len(descs1), len(p1))
+  #print(len(descs2), len(p2))
 
+  progress = ['-','\\','|','/']
   res_1 = []
   res_2 = []
   res_d_1 = []
@@ -386,15 +391,16 @@ def oneNN_wdist(descs1, descs2, p1, p2):
   res_d_d = []
   descs1 = np.array(descs1)
   descs2 = np.array(descs2)
-
+  counter = 0
   for i_desc1 in range(0, len(descs1)):
+    counter += 1
+    print(counter, "of", len(descs2),"\r", end="")
     desc1 = descs1[i_desc1]
     s_dist = float("inf")
     s_dist_index = 0
     for i_desc2 in range(0, len(descs2)):
       desc2 = descs2[i_desc2]
       dist = np.linalg.norm(desc2 - desc1)
-
       if (dist < s_dist):
         s_dist = dist
         s_dist_index = i_desc2
@@ -411,7 +417,7 @@ def oneNN_wdist(descs1, descs2, p1, p2):
   res_d_1_np = np.array(res_d_1)
   res_d_2_np = np.array(res_d_2)
   index = np.argsort(res_d_d_np)
-  print(res_d_d_np[index])
+  #print(res_d_d_np[index])
   return(res_1_np[index], res_2_np[index], res_d_1_np[index], res_d_2_np[index])
 
   """
@@ -437,10 +443,6 @@ def cut_img(I_name, quadrant):
   if (quadrant == 1)
   img = img[0:col/2][
 """
-  
-
-
-
 
 def advanced_oneNN(descss1, descss2, pp1, pp2):
   print("calculating advanced oneNN")
@@ -484,3 +486,42 @@ def advanced_oneNN(descss1, descss2, pp1, pp2):
 
   print("returned")
   return(new_res_p1, new_res_p2)
+
+def orientation(p):
+  """
+  Input : Image I, point point
+  Output: orientation of image
+  """
+  x = p[0]
+  y = p[1]
+  theta = 0.5 * math.pi - math.atan2(x, y)
+  theta = math.degrees(theta % (2 * math.pi))
+  #print(theta)
+  return(theta)
+
+def circle_matrix(mat):
+  n = len(mat)
+  a = b = n/2
+  r = a - 1
+  y,x = np.ogrid[-a:n-a, -b:n-b]
+  mask = x*x + y*y <= r*r
+
+  array = np.zeros((n,n))
+  array[mask] = mat[mask]
+  return(array)
+
+def cleanfiles():
+  for file in os.listdir("."):
+  #print(os.path.splitext(file)[0])
+    if os.path.splitext(file)[1] == ".jpg":
+      if ((os.path.splitext(file)[0])[:2]) == "1-" or ((os.path.splitext(file)[0])[:2]) == "0-":
+        print ("Moved", file)
+        shutil.move(file, os.path.join("result", file))
+      if ((os.path.splitext(file)[0])[:2]) == "xx" or ((os.path.splitext(file)[0])[:2]) == "zz":
+        shutil.move(file, os.path.join("otherresult", file))
+      if ((os.path.splitext(file)[0])[:2]) == "xx" or ((os.path.splitext(file)[0])[:2]) == "zz":
+        shutil.move(file, os.path.join("otherresult", file))
+    if os.path.splitext(file)[1] == ".npy":
+      shutil.move(file, os.path.join("numpyfiles", file))
+
+          

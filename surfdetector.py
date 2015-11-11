@@ -17,7 +17,7 @@ from scipy import ndimage
 
 def find_max_new(scale,i,y,x):
   maxpoint = (scale[i, y, x] > 0)
-  minpoint = (scale[i, y, x] < 0)
+  #minpoint = (scale[i, y, x] < 0)
   # Run through 26 neighbours
   for ci in range(-1,2):
     for cy in range(-1,2):
@@ -25,16 +25,16 @@ def find_max_new(scale,i,y,x):
         if cy == 0 and cx == 0 and ci == 0:
           continue # perform next iteration as we are in orego.
         maxpoint = maxpoint and scale[i,y,x]>scale[i+ci,y+cy,x+cx]
-        minpoint = minpoint and scale[i,y,x]<scale[i+ci,y+cy,x+cx]
+        #minpoint = minpoint and scale[i,y,x]<scale[i+ci,y+cy,x+cx]
         #print scale[y+cy,x+cx,i+ci]
         # If point lies between max and min, we break
-        if not maxpoint and not minpoint:
+        if not maxpoint:# and not minpoint:
           return 0
-      if not maxpoint and not minpoint:
+      if not maxpoint:# and not minpoint:
         return 0
-    if not maxpoint and not minpoint:
+    if not maxpoint:# and not minpoint:
       return 0
-  if maxpoint == True or minpoint == True:
+  if maxpoint == True:# or minpoint == True:
     return 1
 
 def accurate_keypoint(point,deriv1, deriv2, deriv3, xh_t):
@@ -82,6 +82,8 @@ def getGauss(size,i):
     return h.gauss(size,sigma)
 
 def findSurfPoints(filename):
+  progress = ['-','\\','|','/']
+  print ("Finding points for picture",filename)
   clear = " " * 50
   I_bw = cv2.imread(filename, 0).astype(float)/255.0
   I = cv2.imread(filename)
@@ -122,9 +124,10 @@ def findSurfPoints(filename):
   conv99 = numpy.zeros((6, I_bw.shape[0],I_bw.shape[1]))
 
   # Each holder has the image corresponding to dxx, dyy, dxy, dx, dy, gauss
-  #print(clear,"\r", end="")
+  print(clear,"\r", end="")
   #print("Process: Convolving image for all derivates","\r", end="")
   for i in range(0,6):
+    print("Process: calculating image derivitives",i,"of 5","\r", end="")
     conv9[i]  = cv2.filter2D(I_bw,-1, filter9[i])
     conv15[i] = cv2.filter2D(I_bw,-1, filter15[i])
     conv21[i] = cv2.filter2D(I_bw,-1, filter21[i])
@@ -141,8 +144,10 @@ def findSurfPoints(filename):
   o1 = numpy.zeros((4, I_bw.shape[0],I_bw.shape[1]))
   o2 = numpy.zeros((4, I_bw.shape[0],I_bw.shape[1]))
   o3 = numpy.zeros((4, I_bw.shape[0],I_bw.shape[1]))
-
+  print(clear,"\r", end="")
+  print("Process: calculating determinant","\r", end="")
   # Calculate determinant for each octave
+  s = 0
   for y in range(3,I_bw.shape[0]-3):
     for x in range(3,I_bw.shape[1]-3):
       o1[0, y,x] =  conv9[0,y,x]* conv9[1,y,x]-((0.9*conv9[2,y,x])**2)
@@ -167,14 +172,11 @@ def findSurfPoints(filename):
   extrema_points_3_1 = []
   extrema_points_3_2 = []
   #extrema_points_4 = [] 
-  #print(clear,"\r", end="")
-
-  #print("Process: Finding points for first octave","\r", end="")
-
+  print(clear,"\r", end="")
+  print("Process: Finding points for first octave","\r", end="")
   # Perform non maximal supression on determinant of Hessian.
   passedmax, passeddxhat, rejectedxhat = 0,0,0
   passedmax1, passeddxhat1, rejectedxhat1 = 0,0,0
-
   for y in range(0,I_bw.shape[0]):
     for x in range(0,I_bw.shape[1]):
       Flag = False
@@ -195,48 +197,40 @@ def findSurfPoints(filename):
   dogn2 = numpy.array(extrema_points_1_2)
   if (len(dogn1) > 0) and (len(dogn2)>0):
     result = numpy.vstack([dogn1, dogn2])
-  #print("dog1")
-  #print(dogn1)
-  #print("\ndogn2")
-  #print(dogn2)
+  print(clear,"\r", end="")
+
   print ("Number of points in first octave: %d" % len(result))
-  
+  print(clear,"\r", end="")
+  print("Process: Finding points for second octave","\r", end="")
+  s = 0
   for y in range(0,I_bw.shape[0]):
     for x in range(0,I_bw.shape[1]):
-      Flag = False
       if find_max_new(o2,1,y,x) == 1:
         if (accurate_keypoint(I_bw[y,x],conv15[:,y,x],conv27[:,y,x],conv39[:,y,x], 0.5) == 1):
           extrema_points_2_1.append([y,x,(3.6)])
-          #I[y,x] = (0,0,255)
           cv2.circle(I,(x,y), 5, (0,255,0), 2)
-
-        Flag = True
-      if Flag == False and find_max_new(o2,2,y,x) == 1:
+      if find_max_new(o2,2,y,x) == 1:
         if (accurate_keypoint(I_bw[y,x],conv27[:,y,x],conv39[:,y,x],conv51[:,y,x], 0.5) == 1):
           extrema_points_2_2.append([y,x,(5.2)])
-          #I[y,x] = (0,0,255)
           cv2.circle(I,(x,y), 5, (0,155,0), 2)
   dogn3 =  numpy.array(extrema_points_2_1)
   dogn4 = numpy.array(extrema_points_2_2)
   if (len(dogn3) > 1) and (len(dogn4)>1):
     result1 = numpy.vstack([dogn3, dogn4])
-    print ("Number of points in second octave: %d" % len(result1))
-
+  print(clear,"\r", end="")
+  print ("Number of points in second octave: %d" % len(result1))
+  print(clear,"\r", end="")
+  print("Process: Finding points for third octave","\r", end="")
   for y in range(0,I_bw.shape[0]):
     for x in range(0,I_bw.shape[1]):
-      Flag = False
       if find_max_new(o3,1,y,x) == 1:
         if (accurate_keypoint(I_bw[y,x],conv27[:,y,x],conv51[:,y,x],conv75[:,y,x], 0.5) == 1):
-          #I[y,x] = (255,0,0)
           cv2.circle(I,(x,y), 7, (255,0,0), 2)
           extrema_points_3_1.append([y,x,(6.8)])
-        Flag = True
-      if Flag == False and find_max_new(o3,2,y,x) == 1:
+      if find_max_new(o3,2,y,x) == 1:
         if (accurate_keypoint(I_bw[y,x],conv51[:,y,x],conv75[:,y,x],conv99[:,y,x], 0.5) == 1):
-          #I[y,x] = (0,0,255)
           cv2.circle(I,(x,y), 7, (155,0,0), 2)
           extrema_points_3_2.append([y,x,(10.0)])
-
   dogn5 =  numpy.array(extrema_points_3_1)
   dogn6 = numpy.array(extrema_points_3_2)
   if (len(dogn5) == 0):
@@ -244,9 +238,9 @@ def findSurfPoints(filename):
   if (len(dogn6) == 0):
     dogn6 = [0,0,0]
   result2 = numpy.vstack([dogn5, dogn6])
+  print(clear,"\r", end="")
   print ("Number of points in thrid octave: %d" % len(result2))
   alloctaves = numpy.vstack([result,result1,result2]) 
-  #III = cv2.imread(filename)
   #coordin = (numpy.array([alloctaves[:,1], alloctaves[:,0]]).astype(int)).T
   #III[coordin] = (0,0,255)
   #cv2.imwrite(str(filename)[:-4] + "-surfdet" + ".jpg", III)
